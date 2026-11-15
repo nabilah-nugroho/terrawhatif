@@ -798,20 +798,20 @@ export default function App() {
 
       {/* CLEAN TOP BAR + 3P/OVERVIEW MODE + THERMOMETER GAUGE (Chapters 1–3) */}
       {stage !== 'INTRO' && !hudHidden && (
-        <header className="fixed top-3 left-3 right-3 z-20 obsidian-hud rounded-2xl px-3.5 sm:px-4 py-2 flex items-center justify-between gap-4">
+        <header className="fixed top-3 left-3 right-3 z-20 obsidian-hud rounded-2xl px-2 sm:px-3.5 py-2 flex items-center justify-between gap-1.5 sm:gap-3">
           {/* Brand + Chapter */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 shrink-0 xl:shrink">
             <button
               type="button"
               onClick={() => setStage('INTRO')}
-              className="text-sm font-bold text-white tracking-tight whitespace-nowrap hover:text-sky-200 transition-colors"
+              className="text-xs sm:text-sm font-bold text-white tracking-tight whitespace-nowrap shrink-0 hover:text-sky-200 transition-colors"
             >
               TerraWhatIf
             </button>
-            <span className="text-white/25 hidden sm:inline" aria-hidden="true">
+            <span className="text-white/25 hidden xl:inline shrink-0" aria-hidden="true">
               ·
             </span>
-            <span className="text-xs sm:text-sm font-semibold text-sky-200 truncate hidden md:inline">
+            <span className="text-xs font-semibold text-sky-200 truncate hidden xl:inline min-w-0">
               {quest ? `${quest.subtitle}: ${quest.title}` : 'Science Lab'}
             </span>
           </div>
@@ -820,19 +820,19 @@ export default function App() {
           <div
             data-tour="temp-gauge"
             aria-label="Live planet temperature gauge"
-            className="flex items-center gap-2.5 px-3 py-1 rounded-xl bg-black/45 border border-white/10 shrink-0"
+            className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 rounded-xl bg-black/45 border border-white/10 shrink-0"
           >
-            <div className="flex items-baseline gap-1.5 tabular-nums">
-              <span className="text-sm sm:text-base font-bold text-white">
+            <div className="flex items-baseline gap-1 sm:gap-1.5 tabular-nums">
+              <span className="text-xs sm:text-sm font-bold text-white whitespace-nowrap">
                 {tempC >= 0 ? '+' : ''}
                 {tempC.toFixed(0)}°C
               </span>
-              <span className="text-[11px] font-mono text-slate-400">
+              <span className="hidden md:inline text-[11px] font-mono text-slate-400 whitespace-nowrap">
                 ({simResult.T_surface.toFixed(0)} K)
               </span>
             </div>
 
-            <div className="hidden sm:block w-20 h-2 rounded-full bg-white/10 overflow-hidden">
+            <div className="hidden lg:block w-16 xl:w-20 h-2 rounded-full bg-white/10 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${gaugeTheme.bar}`}
                 style={{ width: `${gaugeFillPct}%` }}
@@ -840,14 +840,17 @@ export default function App() {
             </div>
 
             <span
-              className={`px-2 py-0.5 rounded-full border text-[11px] font-semibold whitespace-nowrap ${gaugeTheme.badge}`}
+              className={`hidden sm:inline px-2 py-0.5 rounded-full border text-[11px] font-semibold whitespace-nowrap ${gaugeTheme.badge}`}
             >
-              {gaugeTheme.status}
+              <span className="xl:hidden">
+                {mood === 'frozen' ? 'Frozen' : mood === 'hot' ? 'Too Hot' : 'Liquid'}
+              </span>
+              <span className="hidden xl:inline">{gaugeTheme.status}</span>
             </span>
           </div>
 
           {/* Right Actions: Walking 3P / Overview + Quick Zooms + Chapters + Sound + 0/8 Notebook + Hide UI + Lab */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <div
               data-tour="camera-modes"
               aria-label="Explorer & Camera Mode"
@@ -858,28 +861,28 @@ export default function App() {
                 onClick={() => setThirdPersonMode(true)}
                 aria-pressed={thirdPersonMode}
                 title="3rd-Person Astronaut Mode (V)"
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
+                className={`px-1.5 sm:px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
                   thirdPersonMode
                     ? 'bg-amber-400/25 border border-amber-300/70 text-amber-100 shadow-[0_0_12px_rgba(251,191,36,0.3)]'
                     : 'text-slate-300 hover:text-white border border-transparent'
                 }`}
               >
                 <Footprints className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden sm:inline">Walking (3P)</span>
+                <span className="hidden lg:inline">Walking (3P)</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleSelectCameraPreset('observatory')}
                 aria-pressed={!thirdPersonMode && activeCamPreset === 'observatory'}
                 title="Wide Observatory Overview Camera (V)"
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
+                className={`px-1.5 sm:px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
                   !thirdPersonMode && activeCamPreset === 'observatory'
                     ? 'bg-sky-400/25 border border-sky-300/50 text-white'
                     : 'text-slate-300 hover:text-white border border-transparent'
                 }`}
               >
                 <Compass className="w-3.5 h-3.5 text-sky-300" />
-                <span>Overview</span>
+                <span className="hidden md:inline">Overview</span>
               </button>
             </div>
 
@@ -917,7 +920,7 @@ export default function App() {
 
             <nav
               aria-label="Chapters"
-              className="hidden lg:flex items-center gap-0.5 p-0.5 rounded-lg bg-white/5 border border-white/10"
+              className="hidden xl:flex items-center gap-0.5 p-0.5 rounded-lg bg-white/5 border border-white/10"
             >
               {STAGES.map((s) => (
                 <button
@@ -940,7 +943,7 @@ export default function App() {
               onClick={handleToggleSound}
               aria-label={soundMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
               title={soundMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
-              className="p-2 rounded-xl bg-white/5 border border-white/15 hover:border-white/35 text-slate-200 hover:text-white transition-colors"
+              className="p-1.5 sm:p-2 rounded-xl bg-white/5 border border-white/15 hover:border-white/35 text-slate-200 hover:text-white transition-colors"
             >
               {soundMuted ? (
                 <VolumeX className="w-3.5 h-3.5 text-slate-400" />
@@ -964,19 +967,19 @@ export default function App() {
               onClick={() => setHudHidden(true)}
               aria-label="Hide HUD to explore 3D scene"
               title="Hide HUD (H)"
-              className="p-2 rounded-xl bg-white/5 border border-white/15 hover:border-white/35 text-slate-200 hover:text-white transition-colors"
+              className="hidden sm:inline-flex p-2 rounded-xl bg-white/5 border border-white/15 hover:border-white/35 text-slate-200 hover:text-white transition-colors"
             >
               <EyeOff className="w-3.5 h-3.5 text-slate-300" />
             </button>
 
-            <div data-tour="lab-tools" className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div data-tour="lab-tools" className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setBadgesOpen(true)}
                 title={`Detective Rank: ${detectiveStatus.rank}`}
-                className="px-2.5 py-1.5 rounded-xl bg-amber-400/15 border border-amber-300/40 hover:bg-amber-400/25 text-xs font-mono text-amber-100 flex items-center gap-1.5 transition-colors whitespace-nowrap tabular-nums"
+                className="px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-amber-400/15 border border-amber-300/40 hover:bg-amber-400/25 text-[10px] sm:text-xs font-mono text-amber-100 flex items-center gap-1 sm:gap-1.5 transition-colors whitespace-nowrap tabular-nums"
               >
-                <Award className="w-3.5 h-3.5 text-amber-300" />
+                <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300" />
                 <span className="hidden 2xl:inline font-sans font-semibold">
                   {detectiveStatus.rank}
                 </span>
@@ -989,18 +992,18 @@ export default function App() {
                 type="button"
                 onClick={() => setNotebookOpen(true)}
                 title="Discovery Notebook"
-                className="px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/15 hover:border-white/35 text-xs font-mono text-slate-100 flex items-center gap-1.5 transition-colors whitespace-nowrap tabular-nums"
+                className="px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-white/5 border border-white/15 hover:border-white/35 text-[10px] sm:text-xs font-mono text-slate-100 flex items-center gap-1 sm:gap-1.5 transition-colors whitespace-nowrap tabular-nums"
               >
-                <BookOpen className="w-3.5 h-3.5 text-sky-300" />
+                <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-300" />
                 <span>{inspectedIds.size}/8</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setScienceLabOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-sky-400/20 border border-sky-300/45 hover:bg-sky-400/30 text-xs font-semibold text-white flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-sky-400/20 border border-sky-300/45 hover:bg-sky-400/30 text-[10px] sm:text-xs font-semibold text-white flex items-center gap-1 sm:gap-1.5 transition-colors whitespace-nowrap"
               >
-                <FlaskConical className="w-3.5 h-3.5 text-sky-200" />
+                <FlaskConical className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-200" />
                 <span className="hidden sm:inline">Science Lab</span>
                 <span className="sm:hidden">Lab</span>
               </button>
