@@ -53,10 +53,10 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
       {/* Header */}
       <div className="flex items-start justify-between gap-4 px-5 pt-4 pb-3 border-b border-white/10">
         <div>
-          <div className="text-xs font-mono text-sky-300">
+          <div className="text-[11px] font-mono text-sky-300">
             Chapter {kid.chapter} · Touch to Understand
           </div>
-          <h3 className="text-lg font-bold text-white mt-0.5 leading-snug">
+          <h3 className="font-display text-lg font-bold text-white mt-0.5 leading-snug">
             {kid.title}
           </h3>
         </div>

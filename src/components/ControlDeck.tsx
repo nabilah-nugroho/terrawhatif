@@ -63,7 +63,7 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
     <section
       data-tour="control-deck"
       aria-label="Chapter controls"
-      className="pointer-events-auto w-full md:max-w-[520px] obsidian-hud-strong rounded-2xl px-4 py-3 text-slate-100 shadow-2xl space-y-2.5"
+      className="pointer-events-auto w-full md:max-w-[520px] obsidian-hud-strong rounded-2xl px-4 py-3 text-slate-100 space-y-2.5"
     >
       {/* Live Before vs. After Earth Baseline Strip + Quick Reset + Prediction Quiz */}
       <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/10">
@@ -71,7 +71,7 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
           <ArrowLeftRight className="w-3.5 h-3.5 text-sky-300 shrink-0" />
           <span className="text-slate-400 shrink-0">vs. Earth:</span>
           {nearBaseline ? (
-            <span className="text-emerald-300 font-semibold truncate">
+            <span className="text-emerald-300 font-medium truncate">
               Baseline (+15°C · 30% Ice)
             </span>
           ) : (
@@ -94,61 +94,53 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
               type="button"
               onClick={onResetBaseline}
               title="Reset planet back to Earth Today (+15°C)"
-              className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/15 text-[11px] font-medium text-slate-200 hover:text-white transition-colors flex items-center gap-1 whitespace-nowrap"
+              className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/12 border border-white/12 text-[11px] font-medium text-slate-300 hover:text-white transition-colors flex items-center gap-1 whitespace-nowrap"
             >
               <RotateCcw className="w-3 h-3 text-sky-300" />
               <span>Reset</span>
             </button>
           )}
 
-          <div className="relative">
-            {predSpotlight && (
-              <span className="absolute -top-6 right-0 px-2 py-0.5 rounded-full bg-amber-300 text-[#06090f] text-[10px] font-bold whitespace-nowrap shadow animate-bounce pointer-events-none">
-                Tap me! ↓
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={onOpenMiniPrediction}
-              className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-colors flex items-center gap-1 whitespace-nowrap ${
-                predSpotlight
-                  ? 'bg-amber-300 text-[#06090f] border-amber-200 shadow-[0_0_16px_rgba(251,191,36,0.55)]'
-                  : 'bg-amber-400/15 border-amber-300/40 text-amber-100 hover:bg-amber-400/25'
-              }`}
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>Prediction Quiz</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onOpenMiniPrediction}
+            className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-colors flex items-center gap-1 whitespace-nowrap ${
+              predSpotlight
+                ? 'bg-amber-400 text-[#06090f] border-amber-300'
+                : 'bg-white/5 border-white/15 text-amber-200 hover:bg-white/12 hover:border-amber-300/45'
+            }`}
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>{predSpotlight ? 'Answer Quiz' : 'Quiz'}</span>
+          </button>
         </div>
       </div>
 
       {/* CHAPTER 1: CO2 Heat Blanket slider + Earth Without Air toggle */}
       {isCh1 && (
         <div
-          className={`relative rounded-xl p-2 -mx-1 transition-all ${
+          className={`rounded-xl p-2 -mx-1 transition-colors border ${
             co2Spotlight
-              ? 'ring-2 ring-amber-300 bg-amber-400/10 shadow-[0_0_24px_rgba(251,191,36,0.28)]'
-              : ''
+              ? 'border-amber-300/60 bg-amber-400/8'
+              : 'border-transparent'
           }`}
         >
-          {co2Spotlight && (
-            <span className="absolute -top-4 left-4 px-2.5 py-0.5 rounded-full bg-amber-300 text-[#06090f] text-[10px] font-bold shadow animate-bounce pointer-events-none">
-              Slide me past 560 ppm! ↓
-            </span>
-          )}
-
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
               <label
                 htmlFor="ch1-co2-slider"
-                className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-white"
+                className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-white min-w-0"
               >
                 <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
-                <span>CO₂ Heat Blanket</span>
+                <span className="truncate">CO₂ Heat Blanket</span>
+                {co2Spotlight && (
+                  <span className="text-[10px] font-mono text-amber-300 shrink-0">
+                    · Goal: &gt; 560 ppm
+                  </span>
+                )}
               </label>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="font-mono text-xs sm:text-sm font-semibold text-amber-200 tabular-nums">
                   {params.noGreenhouse ? '0 ppm' : `${params.co2_ppm.toFixed(0)} ppm`}
                 </span>
@@ -158,12 +150,12 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
                   aria-pressed={params.noGreenhouse}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-colors flex items-center gap-1 whitespace-nowrap ${
                     params.noGreenhouse
-                      ? 'bg-cyan-400/25 border-cyan-300/60 text-cyan-100'
-                      : 'bg-white/5 border-white/15 text-slate-200 hover:text-white hover:border-white/35'
+                      ? 'bg-cyan-400/20 border-cyan-300/55 text-cyan-100'
+                      : 'bg-white/5 border-white/12 text-slate-300 hover:text-white hover:border-white/30'
                   }`}
                 >
                   <Wind className="w-3 h-3" />
-                  <span>{params.noGreenhouse ? 'No Air: ON' : 'Earth Without Air'}</span>
+                  <span>{params.noGreenhouse ? 'No Air: ON' : 'No Air'}</span>
                 </button>
               </div>
             </div>
@@ -191,7 +183,7 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
               <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-1 tabular-nums">
                 <span>50 ppm</span>
                 <span>280 Earth</span>
-                <span className="text-amber-300 font-semibold">560 Goal ▲</span>
+                <span className="text-amber-300 font-semibold">560 Goal</span>
                 <span>2000 ppm</span>
               </div>
             </div>
@@ -203,34 +195,32 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
       {isCh2 && (
         <div className="space-y-2">
           <div
-            className={`relative rounded-xl p-2 -mx-1 transition-all ${
+            className={`rounded-xl p-2 -mx-1 transition-colors border ${
               orbitSpotlight
-                ? 'ring-2 ring-amber-300 bg-amber-400/10 shadow-[0_0_24px_rgba(251,191,36,0.28)]'
-                : ''
+                ? 'border-amber-300/60 bg-amber-400/8'
+                : 'border-transparent'
             }`}
           >
-            {orbitSpotlight && (
-              <span className="absolute -top-4 left-4 px-2.5 py-0.5 rounded-full bg-amber-300 text-[#06090f] text-[10px] font-bold shadow animate-bounce pointer-events-none">
-                Slide to 0.85 AU! ↓
-              </span>
-            )}
-
             <div className="flex items-center justify-between gap-2 mb-1.5">
               <label
                 htmlFor="ch2-orbit-slider"
-                className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-white"
+                className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-white min-w-0"
               >
                 <Rocket className="w-4 h-4 text-sky-300 shrink-0" />
-                <span>Orbit Distance</span>
+                <span className="truncate">Orbit Distance</span>
+                {orbitSpotlight && (
+                  <span className="text-[10px] font-mono text-amber-300 shrink-0">
+                    · Goal: 0.85 AU
+                  </span>
+                )}
               </label>
 
-              <span className="font-mono text-xs sm:text-sm font-semibold text-sky-200 tabular-nums">
+              <span className="font-mono text-xs sm:text-sm font-semibold text-sky-200 tabular-nums shrink-0">
                 {params.a_AU.toFixed(2)} AU
               </span>
             </div>
 
             <div className="relative">
-              {/* Target 0.85 AU & Earth 1.00 AU track markers */}
               <span
                 aria-hidden="true"
                 className="pointer-events-none absolute top-0 bottom-0 left-0 w-0.5 bg-amber-300 z-10"
@@ -251,30 +241,30 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
               />
             </div>
             <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-0.5 tabular-nums">
-              <span className="text-amber-300 font-semibold">▲ 0.85 AU (Goal)</span>
+              <span className="text-amber-300 font-semibold">0.85 AU (Goal)</span>
               <span>1.00 AU (Earth)</span>
               <span>1.15 AU</span>
             </div>
           </div>
 
           <div
-            className={`relative rounded-xl p-2 -mx-1 transition-all border-t border-white/10 ${
+            className={`rounded-xl p-2 -mx-1 transition-colors border-t border-white/10 ${
               co2Spotlight
-                ? 'ring-2 ring-amber-300 bg-amber-400/10 shadow-[0_0_24px_rgba(251,191,36,0.28)]'
+                ? 'ring-1 ring-amber-300/70 bg-amber-400/8'
                 : ''
             }`}
           >
-            {co2Spotlight && (
-              <span className="absolute -top-4 left-4 px-2.5 py-0.5 rounded-full bg-amber-300 text-[#06090f] text-[10px] font-bold shadow animate-bounce pointer-events-none">
-                Slide down to cool Earth! ↓
-              </span>
-            )}
             <div className="flex items-center gap-3">
               <label
                 htmlFor="ch2-co2-slider"
                 className="text-xs font-semibold text-slate-100 whitespace-nowrap"
               >
                 CO₂ Blanket
+                {co2Spotlight && (
+                  <span className="ml-1.5 text-[10px] font-mono text-amber-300 font-normal">
+                    (Slide down)
+                  </span>
+                )}
               </label>
               <input
                 id="ch2-co2-slider"
@@ -299,27 +289,26 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
       {/* CHAPTER 3: Orbit Slider with Green Habitable Zone Band */}
       {isCh3 && (
         <div
-          className={`relative rounded-xl p-2 -mx-1 transition-all ${
+          className={`rounded-xl p-2 -mx-1 transition-colors border ${
             orbitSpotlight
-              ? 'ring-2 ring-amber-300 bg-amber-400/10 shadow-[0_0_24px_rgba(251,191,36,0.28)]'
-              : ''
+              ? 'border-amber-300/60 bg-amber-400/8'
+              : 'border-transparent'
           }`}
         >
-          {orbitSpotlight && (
-            <span className="absolute -top-4 left-4 px-2.5 py-0.5 rounded-full bg-amber-300 text-[#06090f] text-[10px] font-bold shadow animate-bounce pointer-events-none">
-              Slide into green zone! ↓
-            </span>
-          )}
-
-          <div className="flex items-center justify-between text-xs mb-2">
-            <label htmlFor="ch3-orbit-slider" className="flex items-center gap-1.5 font-semibold text-white">
-              <Rocket className="w-4 h-4 text-sky-300" />
-              <span>Orbit Around {isTrappist ? 'TRAPPIST-1' : 'Sun'}</span>
+          <div className="flex items-center justify-between text-xs mb-2 gap-2">
+            <label htmlFor="ch3-orbit-slider" className="flex items-center gap-1.5 font-semibold text-white min-w-0">
+              <Rocket className="w-4 h-4 text-sky-300 shrink-0" />
+              <span className="truncate">Orbit · {isTrappist ? 'TRAPPIST-1' : 'Sun'}</span>
+              {orbitSpotlight && (
+                <span className="text-[10px] font-mono text-amber-300 shrink-0">
+                  · Find green zone
+                </span>
+              )}
             </label>
-            <span className="font-mono text-sky-200 tabular-nums">
+            <span className="font-mono text-sky-200 tabular-nums shrink-0">
               {params.a_AU.toFixed(orbitDigits)} AU ·{' '}
               <span className={simResult.inHZ ? 'text-emerald-300 font-semibold' : 'text-amber-300'}>
-                {simResult.inHZ ? '● In Habitable Zone' : 'Outside Zone'}
+                {simResult.inHZ ? 'In Habitable Zone' : 'Outside Zone'}
               </span>
             </span>
           </div>
@@ -350,7 +339,7 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
           <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-1 tabular-nums">
             <span>{orbitMin.toFixed(orbitDigits)} AU</span>
             <span className="text-emerald-300">
-              Habitable Zone: {simResult.hzBounds.inner.toFixed(isTrappist ? 3 : 2)}–
+              HZ: {simResult.hzBounds.inner.toFixed(isTrappist ? 3 : 2)}–
               {simResult.hzBounds.outer.toFixed(isTrappist ? 3 : 2)} AU
             </span>
             <span>{orbitMax.toFixed(orbitDigits)} AU</span>
@@ -360,18 +349,17 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
 
       {/* 1-Click What-If Scenario Presets */}
       <div className="pt-2 border-t border-white/10 flex items-center gap-1.5 overflow-x-auto obs-scroll">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 shrink-0">
-          What-If:
+        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 shrink-0 mr-0.5">
+          What-If
         </span>
         {visiblePresets.map((preset) => (
           <button
             key={preset.id}
             type="button"
             onClick={() => onSelectPreset(preset)}
-            className="px-2 py-1 rounded-lg bg-white/5 hover:bg-sky-400/20 border border-white/15 hover:border-sky-300/45 text-[11px] font-medium text-slate-200 hover:text-white transition-colors whitespace-nowrap flex items-center gap-1 shrink-0"
+            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/12 border border-white/10 hover:border-sky-300/40 text-[11px] font-medium text-slate-200 hover:text-white transition-colors whitespace-nowrap shrink-0"
           >
-            <span>{preset.label}</span>
-            <span className="text-[9.5px] font-mono text-sky-300">{preset.tag}</span>
+            {preset.label}
           </button>
         ))}
       </div>

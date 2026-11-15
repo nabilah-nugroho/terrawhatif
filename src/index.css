@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -14,19 +15,34 @@
     padding: 0;
     background-color: #06090f;
     color: #eef3fb;
-    font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0.005em;
     overflow-x: hidden;
   }
 }
 
+.font-display {
+  font-family: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+}
+
 .obsidian-hud {
-  background: rgba(9, 13, 20, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(8, 12, 20, 0.72);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 12px 32px -12px rgba(2, 6, 14, 0.65);
 }
 
 .obsidian-hud-strong {
-  background: rgba(9, 13, 20, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 12, 20, 0.86);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 20px 44px -16px rgba(2, 6, 14, 0.8);
 }
 
 /* Precision observatory range slider */
@@ -34,9 +50,9 @@ input[type="range"].obs-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
+  height: 3px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(148, 163, 184, 0.24);
   outline: none;
   cursor: pointer;
 }
@@ -44,26 +60,33 @@ input[type="range"].obs-slider {
 input[type="range"].obs-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   border-radius: 999px;
   background: #f8fafc;
-  border: 2px solid #090d14;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
-  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  border: 2px solid #080c14;
+  box-shadow:
+    0 0 0 1.5px rgba(56, 189, 248, 0.75),
+    0 2px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms ease;
 }
 
 input[type="range"].obs-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
+  transform: scale(1.16);
+  box-shadow:
+    0 0 0 2px rgba(125, 211, 252, 0.95),
+    0 2px 10px rgba(56, 189, 248, 0.4);
 }
 
 input[type="range"].obs-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   border-radius: 999px;
   background: #f8fafc;
-  border: 2px solid #090d14;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
+  border: 2px solid #080c14;
+  box-shadow:
+    0 0 0 1.5px rgba(56, 189, 248, 0.75),
+    0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
 /* Custom thin scrollbars inside HUD drawers */

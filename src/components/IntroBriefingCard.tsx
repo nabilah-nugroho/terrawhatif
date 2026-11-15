@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronRight, Info, ListChecks, RotateCcw, Sliders } from 'lucide-react';
+import { ChevronRight, RotateCcw } from 'lucide-react';
 import { TerraAvatar, type TerraMood } from './TerraAvatar';
+import { BrandMark } from './BrandMark';
 
 interface IntroBriefingCardProps {
   mood: TerraMood;
@@ -9,9 +10,9 @@ interface IntroBriefingCardProps {
   onReplayBriefing?: () => void;
 }
 
-const HEADER_TEXT = 'INCOMING TRANSMISSION // PRIORITY MISSION';
+const HEADER_TEXT = 'ORBITAL TRANSMISSION · PRIORITY MISSION';
 const BODY_TEXT =
-  'Earth’s climate shield is shifting. Step onto the deck, inspect the instruments, and test how our planet survives!';
+  'Earth’s climate shield is shifting. Step onto the observatory deck, inspect the instruments, and test how our planet survives.';
 
 export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
   mood,
@@ -118,23 +119,22 @@ export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
   const typedBody = BODY_TEXT.slice(0, bodyCount);
 
   return (
-    <main className="fixed inset-0 z-20 flex items-end justify-start p-4 pb-16 sm:p-6 sm:pb-20 pointer-events-none">
+    <main className="fixed inset-0 z-20 flex items-end justify-start p-4 pb-16 sm:p-7 sm:pb-20 pointer-events-none">
       <div
         onClick={skipTyping}
-        className="pointer-events-auto w-full max-w-lg obsidian-hud-strong rounded-3xl p-5 sm:p-6 text-slate-100 space-y-4 shadow-2xl border border-sky-400/25"
+        className="pointer-events-auto w-full max-w-lg obsidian-hud-strong rounded-2xl p-6 text-slate-100 space-y-5"
       >
-        <div className="flex items-center gap-3.5">
-          <TerraAvatar size={58} mood={mood} className="shrink-0" />
+        <div className="flex items-start gap-3.5">
+          <div className="relative shrink-0">
+            <TerraAvatar size={54} mood={mood} />
+          </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-[11px] font-mono tracking-wider uppercase text-amber-300 flex items-center gap-2 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                <span className="truncate">
-                  {typedHeader}
-                  {phase === 'header' && (
-                    <span className="inline-block w-1.5 h-3 bg-amber-300 align-middle ml-0.5 animate-pulse" />
-                  )}
-                </span>
+              <div className="text-[11px] font-mono tracking-wider uppercase text-amber-300/90 truncate">
+                {typedHeader}
+                {phase === 'header' && (
+                  <span className="inline-block w-1.5 h-3 bg-amber-300 align-middle ml-0.5 animate-pulse" />
+                )}
               </div>
 
               {isTypingDone && (
@@ -150,28 +150,31 @@ export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
               )}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-0.5">
-              TerraWhatIf
-            </h1>
-            <p className="text-xs text-slate-300">
-              NASA Space Apps 2026 · Planetary Navigator TERRA
+            <div className="flex items-center gap-2.5 mt-1">
+              <BrandMark size={28} />
+              <h1 className="font-display text-2xl sm:text-[28px] font-bold text-white tracking-tight leading-none">
+                TerraWhatIf
+              </h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Coastal Climate Observatory · Planetary Navigator TERRA
             </p>
           </div>
         </div>
 
-        {/* Cinematic Typewriter Transmission Box (grid overlay prevents height jitter) */}
+        {/* Clean Typewriter Transmission Block */}
         <div
-          className="relative rounded-2xl bg-sky-500/10 border border-sky-300/25 px-3.5 py-2.5 cursor-pointer"
+          className="relative border-t border-b border-white/10 py-3 cursor-pointer"
           title={isTypingDone ? undefined : 'Click to finish typing'}
         >
           <div className="grid">
             <p
               aria-hidden="true"
-              className="col-start-1 row-start-1 text-xs sm:text-sm leading-relaxed invisible select-none"
+              className="col-start-1 row-start-1 text-[13px] sm:text-sm leading-relaxed invisible select-none"
             >
               {BODY_TEXT}
             </p>
-            <p className="col-start-1 row-start-1 text-xs sm:text-sm text-slate-100 leading-relaxed">
+            <p className="col-start-1 row-start-1 text-[13px] sm:text-sm text-slate-100 leading-relaxed">
               {typedBody}
               {!isTypingDone && (phase === 'body' || phase === 'uplink') && (
                 <span
@@ -183,42 +186,30 @@ export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
           </div>
         </div>
 
-        {/* Compact 3-Step Mission Overview (smoothly staggers in during briefing) */}
+        {/* Hairline-divided 3-Step Overview (zero nested card clutter) */}
         <div
-          className={`grid grid-cols-1 sm:grid-cols-3 gap-2 transition-all duration-500 ${
+          className={`grid grid-cols-3 gap-3 divide-x divide-white/10 transition-all duration-500 ${
             showSteps ? 'opacity-100 translate-y-0' : 'opacity-25 translate-y-1'
           }`}
         >
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
-            <span className="w-7 h-7 rounded-lg bg-amber-400/20 border border-amber-300/45 text-amber-200 flex items-center justify-center shrink-0">
-              <ListChecks className="w-3.5 h-3.5" />
-            </span>
-            <span className="text-xs font-semibold text-white leading-tight">
-              1. Follow 3 Steps
-            </span>
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-mono text-amber-300 tabular-nums">01</div>
+            <div className="text-xs font-semibold text-white">Follow 3 Steps</div>
           </div>
 
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
-            <span className="w-7 h-7 rounded-lg bg-sky-400/20 border border-sky-300/45 text-sky-200 flex items-center justify-center shrink-0">
-              <Info className="w-3.5 h-3.5" />
-            </span>
-            <span className="text-xs font-semibold text-white leading-tight">
-              2. Inspect (i) Gear
-            </span>
+          <div className="pl-3 space-y-0.5">
+            <div className="text-[10px] font-mono text-sky-300 tabular-nums">02</div>
+            <div className="text-xs font-semibold text-white">Scan Deck Gear</div>
           </div>
 
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 border border-white/10">
-            <span className="w-7 h-7 rounded-lg bg-emerald-400/20 border border-emerald-300/45 text-emerald-200 flex items-center justify-center shrink-0">
-              <Sliders className="w-3.5 h-3.5" />
-            </span>
-            <span className="text-xs font-semibold text-white leading-tight">
-              3. Test “What If”
-            </span>
+          <div className="pl-3 space-y-0.5">
+            <div className="text-[10px] font-mono text-emerald-300 tabular-nums">03</div>
+            <div className="text-xs font-semibold text-white">Test “What If”</div>
           </div>
         </div>
 
         <div className="flex items-center justify-between gap-3 pt-1">
-          <span className="text-[11px] font-mono text-slate-400">
+          <span className="text-[11px] font-mono text-slate-400 truncate">
             NASA CERES · Giovanni · Exoplanet Archive
           </span>
           <button
@@ -227,11 +218,7 @@ export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
               e.stopPropagation();
               onAcceptMission();
             }}
-            className={`px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-bold hover:brightness-110 transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              isTypingDone
-                ? 'shadow-[0_0_26px_rgba(249,115,22,0.65)] scale-[1.02]'
-                : 'shadow-[0_0_16px_rgba(249,115,22,0.4)]'
-            }`}
+            className="px-5 py-2.5 rounded-xl bg-amber-400 text-[#06090f] text-xs sm:text-sm font-bold hover:bg-amber-300 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
           >
             <span>Accept Mission</span>
             <ChevronRight className="w-4 h-4" />

@@ -381,7 +381,7 @@ export const FeatureTourOverlay: React.FC<FeatureTourOverlayProps> = ({
               <div className="text-[11px] font-mono text-slate-400 tabular-nums">
                 Quick Tour · Step {stepIdx + 1} of {TOUR_STEPS.length}
               </div>
-              <h3 className="text-sm sm:text-base font-bold text-white leading-tight truncate">
+              <h3 className="font-display text-sm sm:text-base font-bold text-white leading-tight truncate">
                 {step.title}
               </h3>
             </div>
@@ -455,7 +455,7 @@ export const FeatureTourOverlay: React.FC<FeatureTourOverlayProps> = ({
             <button
               type="button"
               onClick={goNext}
-              className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold hover:brightness-110 transition-all shadow-[0_0_16px_rgba(249,115,22,0.4)] flex items-center gap-1 whitespace-nowrap"
+              className="px-3.5 py-1.5 rounded-lg bg-amber-400 text-[#06090f] text-xs font-bold hover:bg-amber-300 transition-colors flex items-center gap-1 whitespace-nowrap"
             >
               <span>{isLast ? 'Start Exploring' : 'Next'}</span>
               <ChevronRight className="w-3.5 h-3.5" />

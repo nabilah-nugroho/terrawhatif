@@ -523,11 +523,11 @@ export const ChapterStoryModal: React.FC<ChapterStoryModalProps> = ({
           <div className="grid">
             <h3
               aria-hidden="true"
-              className="col-start-1 row-start-1 text-base sm:text-lg font-bold leading-snug invisible select-none"
+              className="col-start-1 row-start-1 font-display text-base sm:text-lg font-bold leading-snug invisible select-none"
             >
               {beat.headline}
             </h3>
-            <h3 className="col-start-1 row-start-1 text-base sm:text-lg font-bold text-white leading-snug">
+            <h3 className="col-start-1 row-start-1 font-display text-base sm:text-lg font-bold text-white leading-snug">
               {beat.headline.slice(0, headCount)}
               {typingPhase === 'head' && (
                 <span
@@ -606,7 +606,7 @@ export const ChapterStoryModal: React.FC<ChapterStoryModalProps> = ({
           <button
             type="button"
             onClick={handleNext}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(249,115,22,0.45)] hover:brightness-110 transition-all flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-xl bg-amber-400 text-[#06090f] text-xs sm:text-sm font-bold hover:bg-amber-300 transition-colors flex items-center gap-1.5"
           >
             <span>{isLastBeat ? story.ctaLabel : 'Next Clue'}</span>
             <ChevronRight className="w-4 h-4" />

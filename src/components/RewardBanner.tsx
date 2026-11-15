@@ -23,10 +23,10 @@ export const RewardBanner: React.FC<RewardBannerProps> = ({ reward, onDismiss })
   const isWrong = reward.kind === 'wrong';
 
   const containerClasses = isWrong
-    ? 'bg-gradient-to-r from-rose-950/95 via-slate-900/95 to-amber-950/95 border-rose-300/70 text-rose-50 shadow-[0_0_28px_rgba(244,63,94,0.38)]'
+    ? 'obsidian-hud-strong border-rose-400/45 text-rose-50'
     : isMission
-      ? 'bg-gradient-to-r from-emerald-950/95 via-slate-900/95 to-amber-950/95 border-amber-300/75 text-white shadow-[0_0_32px_rgba(251,191,36,0.45)]'
-      : 'bg-emerald-950/95 border-emerald-300/70 text-emerald-50 shadow-[0_0_24px_rgba(52,211,153,0.4)]';
+      ? 'obsidian-hud-strong border-amber-300/50 text-white'
+      : 'obsidian-hud-strong border-emerald-400/45 text-emerald-50';
 
   return (
     <div
@@ -36,11 +36,11 @@ export const RewardBanner: React.FC<RewardBannerProps> = ({ reward, onDismiss })
       className="fixed top-18 left-1/2 -translate-x-1/2 z-50 w-[calc(100vw-1.5rem)] max-w-md pointer-events-auto"
     >
       <div
-        className={`relative flex items-start gap-3 px-4 py-3 rounded-2xl border shadow-2xl animate-[bannerIn_0.28s_ease-out_forwards] ${containerClasses}`}
+        className={`relative flex items-start gap-3 px-4 py-3 rounded-2xl border animate-[bannerIn_0.24s_ease-out_forwards] ${containerClasses}`}
       >
         {/* Pure SVG vector starburst or alert accent */}
         {isWrong ? (
-          <div className="w-8 h-8 rounded-xl bg-rose-400/20 border border-rose-300/45 flex items-center justify-center shrink-0 mt-0.5">
+          <div className="w-8 h-8 rounded-xl bg-rose-400/15 border border-rose-300/35 flex items-center justify-center shrink-0 mt-0.5">
             <AlertTriangle className="w-4 h-4 text-rose-200" />
           </div>
         ) : (
@@ -53,15 +53,12 @@ export const RewardBanner: React.FC<RewardBannerProps> = ({ reward, onDismiss })
               cx="18"
               cy="18"
               r="14"
-              fill={isMission ? 'rgba(251,191,36,0.22)' : 'rgba(52,211,153,0.22)'}
+              fill={isMission ? 'rgba(251,191,36,0.16)' : 'rgba(52,211,153,0.16)'}
             />
             <path
               d="M18 4l2.2 8.2L28 14l-7.8 2.2L18 24l-2.2-7.8L8 14l7.8-1.8L18 4Z"
               fill={isMission ? '#fcd34d' : '#6ee7b7'}
             />
-            <circle cx="8" cy="8" r="1.4" fill="#fde68a" />
-            <circle cx="29" cy="9" r="1.2" fill="#a7f3d0" />
-            <circle cx="28" cy="27" r="1.5" fill="#fde68a" />
           </svg>
         )}
 
@@ -74,14 +71,14 @@ export const RewardBanner: React.FC<RewardBannerProps> = ({ reward, onDismiss })
             ) : (
               <Sparkles className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
             )}
-            <span className="leading-snug">{reward.title}</span>
+            <span className="font-display leading-snug">{reward.title}</span>
           </div>
 
-          <p className="text-xs text-slate-100 leading-relaxed">{reward.subtitle}</p>
+          <p className="text-xs text-slate-200 leading-relaxed">{reward.subtitle}</p>
 
           {reward.hint && (
-            <p className="text-[11px] font-semibold text-amber-200 pt-0.5">
-              Try next: {reward.hint}
+            <p className="text-[11px] font-medium text-amber-200 pt-0.5">
+              Next: {reward.hint}
             </p>
           )}
 
@@ -93,7 +90,7 @@ export const RewardBanner: React.FC<RewardBannerProps> = ({ reward, onDismiss })
                   reward.onAction?.();
                   onDismiss?.();
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold shadow-[0_0_16px_rgba(249,115,22,0.5)] hover:brightness-110 transition-all inline-flex items-center gap-1"
+                className="px-3.5 py-1.5 rounded-xl bg-amber-400 text-[#06090f] text-xs font-bold hover:bg-amber-300 transition-colors inline-flex items-center gap-1"
               >
                 <span>{reward.actionLabel}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
