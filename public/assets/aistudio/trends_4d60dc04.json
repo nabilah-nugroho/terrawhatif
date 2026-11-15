@@ -1,0 +1,58 @@
+{
+  "_metadata": {
+    "title": "NASA Space Apps 2026: Be An Earth System Trend Detective! - Benchmark Dataset",
+    "attribution": "Dataset generated with AI assistance modeled on authentic climatological records.",
+    "source": "NASA Giovanni / GES DISC — MERRA-2 & AIRS",
+    "temporal_coverage": "2003–2025 (Annual Means, n=23)"
+  },
+  "variables": {
+    "arctic_surface_temp": {
+      "description": "Arctic surface air temperature anomaly",
+      "units": "°C relative to 1981-2010 baseline",
+      "spatial_bounding_box": "66°N–90°N, 180°W–180°E",
+      "mission": "MERRA-2",
+      "trend_expected": "+0.75 °C/decade (Polar Amplification)",
+      "data": [
+        1.05, 0.98, 1.25, 1.30, 1.15, 1.45, 1.52, 1.60, 1.58, 1.75, 
+        1.70, 1.95, 2.05, 2.12, 2.30, 2.25, 2.45, 2.50, 2.62, 2.55, 
+        2.75, 2.82, 2.78
+      ]
+    },
+    "tropical_surface_temp": {
+      "description": "Tropical/Equatorial surface air temperature anomaly",
+      "units": "°C relative to 1981-2010 baseline",
+      "spatial_bounding_box": "20°S–20°N, 180°W–180°E",
+      "mission": "MERRA-2",
+      "trend_expected": "+0.22 °C/decade",
+      "data": [
+        0.25, 0.28, 0.35, 0.22, 0.31, 0.29, 0.45, 0.48, 0.40, 0.42, 
+        0.51, 0.55, 0.68, 0.72, 0.65, 0.60, 0.75, 0.81, 0.73, 0.78, 
+        0.85, 0.88, 0.90
+      ]
+    },
+    "arctic_sea_ice_albedo": {
+      "description": "Arctic summer surface albedo",
+      "units": "Dimensionless (0-1)",
+      "spatial_bounding_box": "66°N–90°N, 180°W–180°E",
+      "mission": "MERRA-2",
+      "trend_expected": "-0.018/decade (Ice-Albedo Feedback)",
+      "data": [
+        0.548, 0.552, 0.541, 0.545, 0.530, 0.535, 0.538, 0.531, 0.528, 0.522, 
+        0.525, 0.519, 0.520, 0.515, 0.512, 0.518, 0.511, 0.508, 0.505, 0.502, 
+        0.504, 0.501, 0.499
+      ]
+    },
+    "tropical_water_vapor": {
+      "description": "Tropical total column water vapor anomaly",
+      "units": "%",
+      "spatial_bounding_box": "20°S–20°N, 180°W–180°E",
+      "mission": "AIRS",
+      "trend_expected": "+1.6%/decade (Clausius-Clapeyron moistening)",
+      "data": [
+        0.12, 0.45, -0.20, 0.35, 0.60, 0.85, 0.50, 1.10, 0.95, 1.30, 
+        1.55, 1.25, 1.80, 2.10, 1.95, 2.30, 2.45, 2.15, 2.65, 2.80, 
+        3.10, 3.25, 3.40
+      ]
+    }
+  }
+}

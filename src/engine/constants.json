@@ -1,0 +1,36 @@
+{
+  "_meta": "Earth CERES climatology and habitable zone flux parameters compiled with AI assistance from official NASA/peer-reviewed sources for the NASA Space Apps Challenge 2026.",
+  "Earth_CERES_EBAF": {
+    "global_mean_bond_albedo": 0.30,
+    "global_mean_incoming_solar_radiation_TOA_W_m2": 340.0
+  },
+  "Habitable_Zone_Kopparapu_et_al": {
+    "planet_mass": "1 M_Earth",
+    "Runaway_Greenhouse_Inner_Edge": {
+      "coefficients": {
+        "S_eff_sun": 1.107,
+        "a": 1.332e-04,
+        "b": 1.58e-08,
+        "c": -8.308e-12,
+        "d": -1.931e-15
+      },
+      "calculated_S_eff": {
+        "Sun_5772K": 1.106,
+        "TRAPPIST-1_2566K": 0.912
+      }
+    },
+    "Maximum_Greenhouse_Outer_Edge": {
+      "coefficients": {
+        "S_eff_sun": 0.356,
+        "a": 6.171e-05,
+        "b": 1.698e-09,
+        "c": -3.198e-12,
+        "d": -5.575e-16
+      },
+      "calculated_S_eff": {
+        "Sun_5772K": 0.356,
+        "TRAPPIST-1_2566K": 0.222
+      }
+    }
+  }
+}

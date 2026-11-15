@@ -1,0 +1,8 @@
+{
+  "name": "TerraWhatIf: Earth System Trend Detective",
+  "description": "Interactive coastal observatory and radiative-balance climate simulator for NASA Space Apps Challenge 2026, pairing first-order planetary physics with NASA Giovanni time-series trend analysis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

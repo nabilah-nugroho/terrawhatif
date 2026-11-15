@@ -1,0 +1,382 @@
+import * as THREE from 'three';
+
+export interface ObservatoryTextures {
+  deckColor: THREE.CanvasTexture;
+  deckBump: THREE.CanvasTexture;
+  rockColor: THREE.CanvasTexture;
+  rockBump: THREE.CanvasTexture;
+  iceColor: THREE.CanvasTexture;
+  iceBump: THREE.CanvasTexture;
+  oceanNormal: THREE.CanvasTexture;
+  earthColor: THREE.CanvasTexture;
+  earthClouds: THREE.CanvasTexture;
+  earthNight: THREE.CanvasTexture;
+  radialGlow: THREE.CanvasTexture;
+  vaporPuff: THREE.CanvasTexture;
+  dispose: () => void;
+}
+
+function seeded(i: number): number {
+  const x = Math.sin(i * 127.1 + 311.7) * 43758.5453123;
+  return x - Math.floor(x);
+}
+
+function makeCanvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  return [canvas, ctx];
+}
+
+function configureColorTex(
+  canvas: HTMLCanvasElement,
+  repeatX: number,
+  repeatY: number,
+  maxAniso: number
+): THREE.CanvasTexture {
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(repeatX, repeatY);
+  tex.anisotropy = maxAniso;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function configureDataTex(
+  canvas: HTMLCanvasElement,
+  repeatX: number,
+  repeatY: number,
+  maxAniso: number
+): THREE.CanvasTexture {
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.NoColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(repeatX, repeatY);
+  tex.anisotropy = maxAniso;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+export function createObservatoryTextures(maxAniso: number): ObservatoryTextures {
+  // 1. Brushed Observatory Deck Metal & Seam Plates
+  const [deckColC, deckColCtx] = makeCanvas(512, 512);
+  const [deckBmpC, deckBmpCtx] = makeCanvas(512, 512);
+  deckColCtx.fillStyle = '#1c2638';
+  deckColCtx.fillRect(0, 0, 512, 512);
+  deckBmpCtx.fillStyle = '#808080';
+  deckBmpCtx.fillRect(0, 0, 512, 512);
+
+  for (let i = 0; i < 650; i++) {
+    const y = seeded(i * 3) * 512;
+    const shade = 26 + Math.floor(seeded(i * 3 + 1) * 18);
+    deckColCtx.fillStyle = `rgba(${shade + 6}, ${shade + 14}, ${shade + 28}, 0.28)`;
+    deckColCtx.fillRect(0, y, 512, 1.5);
+    const bShade = 115 + Math.floor(seeded(i * 3 + 2) * 30);
+    deckBmpCtx.fillStyle = `rgb(${bShade},${bShade},${bShade})`;
+    deckBmpCtx.fillRect(0, y, 512, 1);
+  }
+  // Panel grid seams + corner rivets
+  deckColCtx.strokeStyle = '#0e1522';
+  deckColCtx.lineWidth = 4;
+  deckBmpCtx.strokeStyle = '#2a2a2a';
+  deckBmpCtx.lineWidth = 5;
+  for (let gx = 0; gx <= 512; gx += 128) {
+    deckColCtx.beginPath();
+    deckColCtx.moveTo(gx, 0);
+    deckColCtx.lineTo(gx, 512);
+    deckColCtx.stroke();
+    deckBmpCtx.beginPath();
+    deckBmpCtx.moveTo(gx, 0);
+    deckBmpCtx.lineTo(gx, 512);
+    deckBmpCtx.stroke();
+  }
+  for (let gy = 0; gy <= 512; gy += 128) {
+    deckColCtx.beginPath();
+    deckColCtx.moveTo(0, gy);
+    deckColCtx.lineTo(512, gy);
+    deckColCtx.stroke();
+    deckBmpCtx.beginPath();
+    deckBmpCtx.moveTo(0, gy);
+    deckBmpCtx.lineTo(512, gy);
+    deckBmpCtx.stroke();
+  }
+  for (let gx = 0; gx < 512; gx += 128) {
+    for (let gy = 0; gy < 512; gy += 128) {
+      const pts = [
+        [gx + 10, gy + 10],
+        [gx + 118, gy + 10],
+        [gx + 10, gy + 118],
+        [gx + 118, gy + 118],
+      ];
+      for (const [rx, ry] of pts) {
+        deckColCtx.fillStyle = '#334563';
+        deckColCtx.beginPath();
+        deckColCtx.arc(rx, ry, 2.8, 0, Math.PI * 2);
+        deckColCtx.fill();
+        deckBmpCtx.fillStyle = '#d8d8d8';
+        deckBmpCtx.beginPath();
+        deckBmpCtx.arc(rx, ry, 2.8, 0, Math.PI * 2);
+        deckBmpCtx.fill();
+      }
+    }
+  }
+  const deckColor = configureColorTex(deckColC, 4, 3, maxAniso);
+  const deckBump = configureDataTex(deckBmpC, 4, 3, maxAniso);
+
+  // 2. Volcanic Basalt Rock
+  const [rockColC, rockColCtx] = makeCanvas(512, 512);
+  const [rockBmpC, rockBmpCtx] = makeCanvas(512, 512);
+  rockColCtx.fillStyle = '#1b2230';
+  rockColCtx.fillRect(0, 0, 512, 512);
+  rockBmpCtx.fillStyle = '#7c7c7c';
+  rockBmpCtx.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 420; i++) {
+    const x = seeded(i * 5 + 1) * 512;
+    const y = seeded(i * 5 + 2) * 512;
+    const w = 18 + seeded(i * 5 + 3) * 65;
+    const h = 10 + seeded(i * 5 + 4) * 32;
+    const v = 18 + Math.floor(seeded(i * 5 + 5) * 28);
+    rockColCtx.fillStyle = `rgba(${v}, ${v + 7}, ${v + 18}, 0.45)`;
+    rockColCtx.fillRect(x, y, w, h);
+    const bv = 75 + Math.floor(seeded(i * 5 + 5) * 110);
+    rockBmpCtx.fillStyle = `rgba(${bv},${bv},${bv},0.42)`;
+    rockBmpCtx.fillRect(x, y, w, h);
+  }
+  const rockColor = configureColorTex(rockColC, 3, 2, maxAniso);
+  const rockBump = configureDataTex(rockBmpC, 3, 2, maxAniso);
+
+  // 3. Glacial Crystalline Ice
+  const [iceColC, iceColCtx] = makeCanvas(512, 512);
+  const [iceBmpC, iceBmpCtx] = makeCanvas(512, 512);
+  const iceGrad = iceColCtx.createLinearGradient(0, 0, 512, 512);
+  iceGrad.addColorStop(0, '#eef7ff');
+  iceGrad.addColorStop(0.5, '#cfe8fa');
+  iceGrad.addColorStop(1, '#a9d4f2');
+  iceColCtx.fillStyle = iceGrad;
+  iceColCtx.fillRect(0, 0, 512, 512);
+  iceBmpCtx.fillStyle = '#888888';
+  iceBmpCtx.fillRect(0, 0, 512, 512);
+
+  for (let i = 0; i < 160; i++) {
+    const x1 = seeded(i * 4 + 1) * 512;
+    const y1 = seeded(i * 4 + 2) * 512;
+    const x2 = x1 + (seeded(i * 4 + 3) - 0.5) * 130;
+    const y2 = y1 + (seeded(i * 4 + 4) - 0.5) * 130;
+    iceColCtx.strokeStyle = i % 2 === 0 ? 'rgba(255,255,255,0.5)' : 'rgba(94, 165, 218, 0.35)';
+    iceColCtx.lineWidth = 1.5 + seeded(i) * 2.5;
+    iceColCtx.beginPath();
+    iceColCtx.moveTo(x1, y1);
+    iceColCtx.lineTo(x2, y2);
+    iceColCtx.stroke();
+
+    iceBmpCtx.strokeStyle = i % 2 === 0 ? '#d8d8d8' : '#404040';
+    iceBmpCtx.lineWidth = 2;
+    iceBmpCtx.beginPath();
+    iceBmpCtx.moveTo(x1, y1);
+    iceBmpCtx.lineTo(x2, y2);
+    iceBmpCtx.stroke();
+  }
+  const iceColor = configureColorTex(iceColC, 2, 2, maxAniso);
+  const iceBump = configureDataTex(iceBmpC, 2, 2, maxAniso);
+
+  // 4. Seamless Ocean Normal Map (sine wave derivative field)
+  const [oceanC, oceanCtx] = makeCanvas(256, 256);
+  const img = oceanCtx.createImageData(256, 256);
+  const data = img.data;
+  for (let y = 0; y < 256; y++) {
+    const v = (y / 256) * Math.PI * 2;
+    for (let x = 0; x < 256; x++) {
+      const u = (x / 256) * Math.PI * 2;
+      const dx =
+        Math.cos(u * 3 + v * 2) * 0.25 +
+        Math.cos(u * 7 - v * 5) * 0.14 +
+        Math.cos(u * 13 + v * 9) * 0.08;
+      const dy =
+        Math.sin(u * 2 - v * 4) * 0.25 +
+        Math.sin(u * 6 + v * 7) * 0.14 +
+        Math.sin(u * 11 - v * 12) * 0.08;
+      const idx = (y * 256 + x) * 4;
+      data[idx] = Math.round((dx * 0.5 + 0.5) * 255);
+      data[idx + 1] = Math.round((dy * 0.5 + 0.5) * 255);
+      data[idx + 2] = 242;
+      data[idx + 3] = 255;
+    }
+  }
+  oceanCtx.putImageData(img, 0, 0);
+  const oceanNormal = configureDataTex(oceanC, 24, 24, maxAniso);
+
+  // 5. Distant 3D Earth Equirectangular Map (Ocean + Continents + Clouds + Night Lights)
+  const [earthColC, earthColCtx] = makeCanvas(1024, 512);
+  earthColCtx.fillStyle = '#1557a8';
+  earthColCtx.fillRect(0, 0, 1024, 512);
+
+  // Deep ocean bathymetry variance
+  for (let i = 0; i < 60; i++) {
+    const x = seeded(i * 6 + 1) * 1024;
+    const y = seeded(i * 6 + 2) * 512;
+    const r = 40 + seeded(i * 6 + 3) * 120;
+    const g = earthColCtx.createRadialGradient(x, y, 5, x, y, r);
+    g.addColorStop(0, 'rgba(32, 114, 198, 0.32)');
+    g.addColorStop(1, 'rgba(13, 62, 130, 0)');
+    earthColCtx.fillStyle = g;
+    earthColCtx.beginPath();
+    earthColCtx.arc(x, y, r, 0, Math.PI * 2);
+    earthColCtx.fill();
+  }
+
+  // Stylized recognizable continents (Americas, Europe/Africa, Eurasia, Australia)
+  const blobs = [
+    // Americas
+    [255, 165, 76, 62, -0.35],
+    [305, 225, 38, 34, 0.2],
+    [335, 315, 52, 74, 0.18],
+    // Africa & Europe
+    [545, 145, 72, 42, -0.15],
+    [555, 255, 62, 72, 0.1],
+    // Eurasia & India
+    [685, 155, 128, 66, 0.08],
+    [795, 215, 64, 48, -0.25],
+    // Australia & Islands
+    [835, 345, 52, 34, -0.1],
+    [435, 92, 48, 28, -0.2], // Greenland
+  ];
+  for (const [bx, by, rx, ry, rot] of blobs) {
+    earthColCtx.save();
+    earthColCtx.translate(bx, by);
+    earthColCtx.rotate(rot);
+    const lg = earthColCtx.createRadialGradient(0, 0, 4, 0, 0, Math.max(rx, ry));
+    lg.addColorStop(0, '#4f9959');
+    lg.addColorStop(0.65, '#3b7d4e');
+    lg.addColorStop(1, '#6f8750');
+    earthColCtx.fillStyle = lg;
+    earthColCtx.beginPath();
+    earthColCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+    earthColCtx.fill();
+    // Arid desert patch
+    earthColCtx.fillStyle = 'rgba(176, 152, 92, 0.45)';
+    earthColCtx.beginPath();
+    earthColCtx.ellipse(rx * 0.15, ry * 0.12, rx * 0.42, ry * 0.32, 0.3, 0, Math.PI * 2);
+    earthColCtx.fill();
+    earthColCtx.restore();
+  }
+  const earthColor = new THREE.CanvasTexture(earthColC);
+  earthColor.colorSpace = THREE.SRGBColorSpace;
+  earthColor.wrapS = THREE.RepeatWrapping;
+  earthColor.wrapT = THREE.ClampToEdgeWrapping;
+  earthColor.anisotropy = maxAniso;
+  earthColor.needsUpdate = true;
+
+  // Clouds layer
+  const [cloudC, cloudCtx] = makeCanvas(1024, 512);
+  cloudCtx.clearRect(0, 0, 1024, 512);
+  for (let i = 0; i < 165; i++) {
+    const cx = seeded(i * 7 + 11) * 1024;
+    const cy = 48 + seeded(i * 7 + 12) * 416;
+    const rx = 28 + seeded(i * 7 + 13) * 95;
+    const ry = 8 + seeded(i * 7 + 14) * 20;
+    const g = cloudCtx.createRadialGradient(cx, cy, 2, cx, cy, rx);
+    g.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
+    g.addColorStop(0.6, 'rgba(244, 249, 255, 0.34)');
+    g.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    cloudCtx.fillStyle = g;
+    cloudCtx.save();
+    cloudCtx.translate(cx, cy);
+    cloudCtx.scale(1, ry / rx);
+    cloudCtx.beginPath();
+    cloudCtx.arc(0, 0, rx, 0, Math.PI * 2);
+    cloudCtx.fill();
+    cloudCtx.restore();
+  }
+  const earthClouds = new THREE.CanvasTexture(cloudC);
+  earthClouds.colorSpace = THREE.SRGBColorSpace;
+  earthClouds.wrapS = THREE.RepeatWrapping;
+  earthClouds.wrapT = THREE.ClampToEdgeWrapping;
+  earthClouds.anisotropy = maxAniso;
+  earthClouds.needsUpdate = true;
+
+  // Night city lights map
+  const [nightC, nightCtx] = makeCanvas(512, 256);
+  nightCtx.fillStyle = '#000000';
+  nightCtx.fillRect(0, 0, 512, 256);
+  for (const [bx, by, rx, ry] of blobs) {
+    for (let k = 0; k < 22; k++) {
+      const lx = (bx / 2) + (seeded(bx + k * 3) - 0.5) * rx * 0.75;
+      const ly = (by / 2) + (seeded(by + k * 5) - 0.5) * ry * 0.75;
+      const rad = 1 + seeded(k + bx) * 2.2;
+      const g = nightCtx.createRadialGradient(lx, ly, 0, lx, ly, rad * 2);
+      g.addColorStop(0, 'rgba(255, 214, 110, 0.95)');
+      g.addColorStop(1, 'rgba(255, 180, 60, 0)');
+      nightCtx.fillStyle = g;
+      nightCtx.beginPath();
+      nightCtx.arc(lx, ly, rad * 2, 0, Math.PI * 2);
+      nightCtx.fill();
+    }
+  }
+  const earthNight = new THREE.CanvasTexture(nightC);
+  earthNight.colorSpace = THREE.SRGBColorSpace;
+  earthNight.wrapS = THREE.RepeatWrapping;
+  earthNight.wrapT = THREE.ClampToEdgeWrapping;
+  earthNight.needsUpdate = true;
+
+  // 6. Soft Radial Glow Sprite (Star Corona)
+  const [glowC, glowCtx] = makeCanvas(256, 256);
+  const rg = glowCtx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  rg.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  rg.addColorStop(0.22, 'rgba(255, 255, 255, 0.65)');
+  rg.addColorStop(0.55, 'rgba(255, 255, 255, 0.16)');
+  rg.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  glowCtx.fillStyle = rg;
+  glowCtx.fillRect(0, 0, 256, 256);
+  const radialGlow = new THREE.CanvasTexture(glowC);
+  radialGlow.colorSpace = THREE.SRGBColorSpace;
+  radialGlow.needsUpdate = true;
+
+  // 7. Vapor Puff Sprite
+  const [vapC, vapCtx] = makeCanvas(128, 128);
+  const vg = vapCtx.createRadialGradient(64, 64, 4, 64, 64, 62);
+  vg.addColorStop(0, 'rgba(245, 238, 230, 0.62)');
+  vg.addColorStop(0.55, 'rgba(232, 224, 216, 0.24)');
+  vg.addColorStop(1, 'rgba(232, 224, 216, 0)');
+  vapCtx.fillStyle = vg;
+  vapCtx.fillRect(0, 0, 128, 128);
+  const vaporPuff = new THREE.CanvasTexture(vapC);
+  vaporPuff.colorSpace = THREE.SRGBColorSpace;
+  vaporPuff.needsUpdate = true;
+
+  const all = [
+    deckColor,
+    deckBump,
+    rockColor,
+    rockBump,
+    iceColor,
+    iceBump,
+    oceanNormal,
+    earthColor,
+    earthClouds,
+    earthNight,
+    radialGlow,
+    vaporPuff,
+  ];
+
+  return {
+    deckColor,
+    deckBump,
+    rockColor,
+    rockBump,
+    iceColor,
+    iceBump,
+    oceanNormal,
+    earthColor,
+    earthClouds,
+    earthNight,
+    radialGlow,
+    vaporPuff,
+    dispose: () => {
+      for (const tex of all) tex.dispose();
+    },
+  };
+}
