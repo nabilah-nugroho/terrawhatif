@@ -1,9 +1,10 @@
 import React from 'react';
-import { Compass, Eye, Footprints, HelpCircle, Keyboard, Sparkles, X } from 'lucide-react';
+import { Compass, Eye, Footprints, HelpCircle, Keyboard, MapPin, Sparkles, X } from 'lucide-react';
 
 interface ControlsHelpModalProps {
   open: boolean;
   onClose: () => void;
+  onStartTour?: () => void;
 }
 
 const SHORTCUTS = [
@@ -14,7 +15,11 @@ const SHORTCUTS = [
   { keys: 'Drag / Scroll', desc: 'Orbit camera angle and zoom in/out anytime' },
 ];
 
-export const ControlsHelpModal: React.FC<ControlsHelpModalProps> = ({ open, onClose }) => {
+export const ControlsHelpModal: React.FC<ControlsHelpModalProps> = ({
+  open,
+  onClose,
+  onStartTour,
+}) => {
   if (!open) return null;
 
   return (
@@ -83,7 +88,22 @@ export const ControlsHelpModal: React.FC<ControlsHelpModalProps> = ({ open, onCl
           </div>
         </div>
 
-        <div className="flex justify-end pt-1">
+        <div className="flex items-center justify-between gap-2 pt-1">
+          {onStartTour ? (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onStartTour();
+              }}
+              className="px-3.5 py-2 rounded-xl bg-amber-400/15 border border-amber-300/45 text-xs font-semibold text-amber-100 hover:bg-amber-400/25 transition-colors flex items-center gap-1.5"
+            >
+              <MapPin className="w-3.5 h-3.5 text-amber-300" />
+              <span>Replay Feature Tour</span>
+            </button>
+          ) : (
+            <span />
+          )}
           <button
             type="button"
             onClick={onClose}

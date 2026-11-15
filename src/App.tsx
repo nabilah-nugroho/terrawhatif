@@ -55,6 +55,7 @@ import { DetectiveBadgesModal } from './components/DetectiveBadgesModal';
 import { IntroBriefingCard } from './components/IntroBriefingCard';
 import { ControlsHelpModal } from './components/ControlsHelpModal';
 import { MissionDebriefModal } from './components/MissionDebriefModal';
+import { FeatureTourOverlay } from './components/FeatureTourOverlay';
 
 const STAGES: { id: StageId; label: string }[] = [
   { id: 'INTRO', label: 'Start' },
@@ -73,6 +74,7 @@ export default function App() {
   const [badgesOpen, setBadgesOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [debriefOpen, setDebriefOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const [terraCollapsedMobile, setTerraCollapsedMobile] = useState(false);
   const [miniPredOpen, setMiniPredOpen] = useState(false);
   const [miniPredShownOnce, setMiniPredShownOnce] = useState(false);
@@ -305,10 +307,47 @@ export default function App() {
     audioRef.current?.playChapterIntro(num);
   };
 
+  const startFeatureTour = () => {
+    if (stage === 'INTRO') setStage('CH1');
+    setHudHidden(false);
+    setTerraCollapsedMobile(false);
+    setActiveConceptId(null);
+    setScienceLabOpen(false);
+    setBadgesOpen(false);
+    setNotebookOpen(false);
+    setTourOpen(true);
+  };
+
+  const handleCloseTour = (completed: boolean) => {
+    setTourOpen(false);
+    try {
+      window.localStorage.setItem('terrawhatif_tour_seen_v1', '1');
+    } catch {
+      // ignore storage errors
+    }
+    if (completed) {
+      audioRef.current?.playStepSuccess();
+    }
+  };
+
   const handleCompleteStory = () => {
     const closingStage = storyStage;
     setStoryStage(null);
     audioRef.current?.playStoryBeat();
+    if (closingStage === 'CH1') {
+      let tourSeen = false;
+      try {
+        tourSeen = window.localStorage.getItem('terrawhatif_tour_seen_v1') === '1';
+      } catch {
+        tourSeen = false;
+      }
+      if (!tourSeen) {
+        window.setTimeout(() => {
+          startFeatureTour();
+        }, 220);
+        return;
+      }
+    }
     if (closingStage === 'CH2' && !miniPredShownOnce) {
       setMiniPredOpen(true);
       setMiniPredShownOnce(true);
@@ -623,7 +662,8 @@ export default function App() {
           !miniPredOpen &&
           !badgesOpen &&
           !helpOpen &&
-          !debriefOpen
+          !debriefOpen &&
+          !tourOpen
         }
         hideLabels={hudHidden}
         celebrateNonce={celebrateNonce}
@@ -778,6 +818,7 @@ export default function App() {
 
           {/* Visual Color Thermometer Gauge (Celsius primary + Kelvin secondary) */}
           <div
+            data-tour="temp-gauge"
             aria-label="Live planet temperature gauge"
             className="flex items-center gap-2.5 px-3 py-1 rounded-xl bg-black/45 border border-white/10 shrink-0"
           >
@@ -808,6 +849,7 @@ export default function App() {
           {/* Right Actions: Walking 3P / Overview + Quick Zooms + Chapters + Sound + 0/8 Notebook + Hide UI + Lab */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <div
+              data-tour="camera-modes"
               aria-label="Explorer & Camera Mode"
               className="flex items-center gap-0.5 p-0.5 rounded-xl bg-white/5 border border-white/10"
             >
@@ -927,40 +969,42 @@ export default function App() {
               <EyeOff className="w-3.5 h-3.5 text-slate-300" />
             </button>
 
-            <button
-              type="button"
-              onClick={() => setBadgesOpen(true)}
-              title={`Detective Rank: ${detectiveStatus.rank}`}
-              className="px-2.5 py-1.5 rounded-xl bg-amber-400/15 border border-amber-300/40 hover:bg-amber-400/25 text-xs font-mono text-amber-100 flex items-center gap-1.5 transition-colors whitespace-nowrap tabular-nums"
-            >
-              <Award className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden 2xl:inline font-sans font-semibold">
-                {detectiveStatus.rank}
-              </span>
-              <span>
-                {detectiveStatus.unlockedCount}/{detectiveStatus.totalCount}
-              </span>
-            </button>
+            <div data-tour="lab-tools" className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setBadgesOpen(true)}
+                title={`Detective Rank: ${detectiveStatus.rank}`}
+                className="px-2.5 py-1.5 rounded-xl bg-amber-400/15 border border-amber-300/40 hover:bg-amber-400/25 text-xs font-mono text-amber-100 flex items-center gap-1.5 transition-colors whitespace-nowrap tabular-nums"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-300" />
+                <span className="hidden 2xl:inline font-sans font-semibold">
+                  {detectiveStatus.rank}
+                </span>
+                <span>
+                  {detectiveStatus.unlockedCount}/{detectiveStatus.totalCount}
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setNotebookOpen(true)}
-              title="Discovery Notebook"
-              className="px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/15 hover:border-white/35 text-xs font-mono text-slate-100 flex items-center gap-1.5 transition-colors whitespace-nowrap tabular-nums"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-sky-300" />
-              <span>{inspectedIds.size}/8</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setNotebookOpen(true)}
+                title="Discovery Notebook"
+                className="px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/15 hover:border-white/35 text-xs font-mono text-slate-100 flex items-center gap-1.5 transition-colors whitespace-nowrap tabular-nums"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-sky-300" />
+                <span>{inspectedIds.size}/8</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setScienceLabOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-sky-400/20 border border-sky-300/45 hover:bg-sky-400/30 text-xs font-semibold text-white flex items-center gap-1.5 transition-colors whitespace-nowrap"
-            >
-              <FlaskConical className="w-3.5 h-3.5 text-sky-200" />
-              <span className="hidden sm:inline">Science Lab</span>
-              <span className="sm:hidden">Lab</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setScienceLabOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-sky-400/20 border border-sky-300/45 hover:bg-sky-400/30 text-xs font-semibold text-white flex items-center gap-1.5 transition-colors whitespace-nowrap"
+              >
+                <FlaskConical className="w-3.5 h-3.5 text-sky-200" />
+                <span className="hidden sm:inline">Science Lab</span>
+                <span className="sm:hidden">Lab</span>
+              </button>
+            </div>
           </div>
         </header>
       )}
@@ -1042,6 +1086,7 @@ export default function App() {
         <div className="fixed z-20 bottom-3 left-3 right-3 flex flex-col md:flex-row md:items-end md:justify-between gap-3 pointer-events-none">
           {/* Bottom-Left Action-Oriented TERRA Dialogue Card (collapsible on mobile) */}
           <section
+            data-tour="terra-guide"
             aria-label="TERRA step guidance"
             className="pointer-events-auto w-full md:w-[340px] shrink-0 obsidian-hud-strong rounded-2xl p-3.5 text-slate-100 flex flex-col gap-2.5 shadow-2xl"
           >
@@ -1210,7 +1255,18 @@ export default function App() {
       />
 
       {/* CONTROLS & SHORTCUTS HELP MODAL */}
-      <ControlsHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <ControlsHelpModal
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        onStartTour={startFeatureTour}
+      />
+
+      {/* INTERACTIVE POINT-OUT FEATURE TOUR */}
+      <FeatureTourOverlay
+        open={tourOpen}
+        onClose={handleCloseTour}
+        onStepChange={() => audioRef.current?.playStoryBeat()}
+      />
 
       {/* MISSION DEBRIEF CELEBRATION MODAL AFTER CHAPTER 3 */}
       <MissionDebriefModal

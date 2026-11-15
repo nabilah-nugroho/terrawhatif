@@ -17,6 +17,7 @@ export const NavigatorMissionCard: React.FC<NavigatorMissionCardProps> = ({
 
   return (
     <aside
+      data-tour="mission-checklist"
       aria-label="Navigator Mission Checklist"
       className="fixed z-20 top-16 left-3 right-3 sm:right-auto sm:left-3 sm:max-w-[270px] sm:w-[270px] obsidian-hud-strong rounded-2xl p-2.5 text-slate-100 shadow-2xl"
     >

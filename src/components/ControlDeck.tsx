@@ -61,6 +61,7 @@ export const ControlDeck: React.FC<ControlDeckProps> = ({
 
   return (
     <section
+      data-tour="control-deck"
       aria-label="Chapter controls"
       className="pointer-events-auto w-full md:max-w-[520px] obsidian-hud-strong rounded-2xl px-4 py-3 text-slate-100 shadow-2xl space-y-2.5"
     >
