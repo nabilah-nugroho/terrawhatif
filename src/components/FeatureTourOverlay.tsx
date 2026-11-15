@@ -4,9 +4,12 @@ import {
   ChevronRight,
   Compass,
   Crosshair,
+  Eye,
   FlaskConical,
   Gauge,
+  Lightbulb,
   ListChecks,
+  Satellite,
   Sliders,
   Sparkles,
   X,
@@ -59,10 +62,10 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'deck-instruments',
-    title: 'Scan 3D Deck Instruments',
+    title: 'Scan 3D Instruments (3-Layer Science)',
     description:
-      'Follow the glowing floor path to any instrument on the deck. Press [E] or click an instrument to fire your holographic scanner and open 3-tab lessons.',
-    hint: 'Every instrument has Look!, Why?, and Math & NASA Data tabs',
+      'Press [E] or click any glowing instrument (or tap Touch to Understand) to open its 3-step science card: 1. Look! (3D cue) → 2. Why? (analogy) → 3. Math & NASA Data.',
+    hint: 'Step through all 3 tabs inside every instrument card!',
     preferredPlacement: 'center',
     icon: <Crosshair className="w-4 h-4 text-sky-300" />,
     accent: 'sky',
@@ -406,6 +409,26 @@ export const FeatureTourOverlay: React.FC<FeatureTourOverlayProps> = ({
         <p className="text-xs sm:text-[13px] text-slate-200 leading-relaxed">
           {step.description}
         </p>
+
+        {step.id === 'deck-instruments' && (
+          <div className="grid grid-cols-3 gap-1.5 pt-0.5" aria-hidden="true">
+            <div className="rounded-lg bg-sky-500/15 border border-sky-300/35 px-2 py-1.5 text-center">
+              <Eye className="w-3.5 h-3.5 text-sky-300 mx-auto" />
+              <div className="text-[10.5px] font-semibold text-white mt-0.5">1. Look!</div>
+              <div className="text-[9.5px] text-slate-300">Visual 3D</div>
+            </div>
+            <div className="rounded-lg bg-amber-500/15 border border-amber-300/35 px-2 py-1.5 text-center">
+              <Lightbulb className="w-3.5 h-3.5 text-amber-300 mx-auto" />
+              <div className="text-[10.5px] font-semibold text-white mt-0.5">2. Why?</div>
+              <div className="text-[9.5px] text-slate-300">Analogy</div>
+            </div>
+            <div className="rounded-lg bg-emerald-500/15 border border-emerald-300/35 px-2 py-1.5 text-center">
+              <Satellite className="w-3.5 h-3.5 text-emerald-300 mx-auto" />
+              <div className="text-[10.5px] font-semibold text-white mt-0.5">3. NASA</div>
+              <div className="text-[9.5px] text-slate-300">Math + Data</div>
+            </div>
+          </div>
+        )}
 
         {step.hint && (
           <div className="text-[11px] font-mono text-amber-200/90 border-t border-white/10 pt-2">
