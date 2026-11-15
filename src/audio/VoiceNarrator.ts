@@ -38,6 +38,8 @@ const LINES_GENERAL = [
   'Look out toward the ocean horizon. Even subtle shifts in orbit or air rewrite an entire world.',
   'Try switching between walking mode and the overview camera to study Earth from space.',
   'Every planetary climate is a conversation between starlight, ice reflection, and atmospheric warmth.',
+  'Good having your little space pup trotting beside you out here on the deck.',
+  'Look how curious your little companion gets whenever you inspect a new instrument.',
 ];
 
 /**

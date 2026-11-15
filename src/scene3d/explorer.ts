@@ -45,7 +45,7 @@ const OBSTACLES: ObstacleCircle[] = [
  * 2) Right Headland Walkway & Overlook Terrace (smooth ramp up to y = 1.25)
  * 3) Left Headland Ramp & Telescope Terrace (smooth ramp up to y = 1.28)
  */
-function resolveWalkableGround(nx: number, nz: number): { x: number; z: number; y: number } {
+export function resolveWalkableGround(nx: number, nz: number): { x: number; z: number; y: number } {
   let x = nx;
   let z = nz;
 

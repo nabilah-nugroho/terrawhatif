@@ -8,6 +8,7 @@ import { createObservatoryTextures } from '../scene3d/materials';
 import { createEnvironmentSystem } from '../scene3d/environment';
 import { createLandmarksSystem } from '../scene3d/landmarks';
 import { createExplorerSystem } from '../scene3d/explorer';
+import { createCompanionSystem } from '../scene3d/companion';
 import {
   createPostProcessingPipeline,
   type PostProcessingPipeline,
@@ -147,6 +148,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
   const mountRef = useRef<HTMLDivElement | null>(null);
   const labelElsRef = useRef<Record<string, HTMLButtonElement | null>>({});
   const explorerRef = useRef<ReturnType<typeof createExplorerSystem> | null>(null);
+  const companionRef = useRef<ReturnType<typeof createCompanionSystem> | null>(null);
   const landmarksRef = useRef<ReturnType<typeof createLandmarksSystem> | null>(null);
   const [nearbyLandmarkId, setNearbyLandmarkId] = useState<string | null>(null);
   const [showDesktopDpad, setShowDesktopDpad] = useState(false);
@@ -202,6 +204,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
         _wpTarget.copy(rig.group.position);
         _wpTarget.y += 1.05;
         explorerRef.current.triggerScan(_wpTarget);
+        companionRef.current?.triggerScan(_wpTarget);
       }
     }
   }, [activeConceptId]);
@@ -257,6 +260,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
     const targetPos = new THREE.Vector3(coords[0], coords[1] + 0.85, coords[2]);
     if (thirdPersonRef.current && explorerRef.current) {
       explorerRef.current.triggerScan(targetPos);
+      companionRef.current?.triggerScan(targetPos);
       const fromTarget = new THREE.Vector3(
         explorerRef.current.position.x - targetPos.x,
         0,
@@ -288,6 +292,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
   useEffect(() => {
     if (celebrateNonce > 0) {
       explorerRef.current?.triggerCelebration();
+      companionRef.current?.triggerCelebration();
     }
   }, [celebrateNonce]);
 
@@ -331,6 +336,8 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
 
     const explorer = createExplorerSystem(textures);
     explorerRef.current = explorer;
+    const companion = createCompanionSystem(textures);
+    companionRef.current = companion;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = !isSoftwareGl;
@@ -420,6 +427,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
     landmarksRef.current = landmarks;
     scene.add(landmarks.root);
     scene.add(explorer.group);
+    scene.add(companion.group);
 
     // Cinematic Post-Processing Pipeline (GPU only; software WebGL renders direct for smooth pacing)
     const postPipeline: PostProcessingPipeline | null = isSoftwareGl
@@ -722,6 +730,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
         };
       }
 
+      let explorerMoving = false;
       if (thirdPersonRef.current && stageRef.current !== 'INTRO') {
         const keys = keysRef.current;
         let mx = dpadRef.current.x;
@@ -746,6 +755,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
 
         _deltaExplorer.subVectors(explorer.position, _prevExplorerPos);
         if (_deltaExplorer.lengthSq() > 1e-8) {
+          explorerMoving = true;
           camTransitionRef.current.active = false;
           introSweepActive = false;
           camera.position.add(_deltaExplorer);
@@ -760,6 +770,16 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
           prefersReduced
         );
       }
+
+      // Update companion partner to walk alongside, look around, scan, and celebrate together
+      companion.update(
+        explorer.position,
+        explorer.group.rotation.y,
+        explorerMoving,
+        dt,
+        tSec,
+        prefersReduced
+      );
 
       // Update camera preset / instrument focus glide with smooth exponential damping
       if (camTransitionRef.current.active && !introSweepActive) {
@@ -983,8 +1003,10 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
       wpChevronGeo.dispose();
       wpChevronMats.forEach((m) => m.dispose());
       explorerRef.current = null;
+      companionRef.current = null;
       landmarksRef.current = null;
       explorer.dispose();
+      companion.dispose();
       landmarks.dispose();
       envSystem.dispose();
       textures.dispose();
