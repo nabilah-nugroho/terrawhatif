@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 92" width="110" height="92" role="img" aria-label="NASA Insignia">
+  <!-- Classic NASA Insignia (Public Domain U.S. Government Emblem) -->
+  <defs>
+    <clipPath id="nasa-sphere-clip">
+      <circle cx="52" cy="46" r="39" />
+    </clipPath>
+  </defs>
+
+  <!-- Deep space blue sphere -->
+  <circle cx="52" cy="46" r="39" fill="#0B3D91" />
+
+  <!-- Subtle starfield inside sphere -->
+  <g fill="#FFFFFF" clip-path="url(#nasa-sphere-clip)">
+    <circle cx="33" cy="21" r="1.1" opacity="0.9" />
+    <circle cx="44" cy="15" r="0.8" opacity="0.85" />
+    <circle cx="62" cy="18" r="1.2" opacity="0.9" />
+    <circle cx="71" cy="26" r="0.8" opacity="0.8" />
+    <circle cx="24" cy="33" r="0.9" opacity="0.85" />
+    <circle cx="78" cy="36" r="1.0" opacity="0.85" />
+    <circle cx="26" cy="59" r="1.1" opacity="0.9" />
+    <circle cx="39" cy="68" r="0.8" opacity="0.8" />
+    <circle cx="56" cy="74" r="1.2" opacity="0.9" />
+    <circle cx="72" cy="66" r="0.9" opacity="0.85" />
+    <circle cx="47" cy="29" r="0.7" opacity="0.75" />
+    <circle cx="64" cy="59" r="0.7" opacity="0.75" />
+    <!-- Four-point bright star accents -->
+    <path d="M58 24 L59 26.5 L61.5 27.5 L59 28.5 L58 31 L57 28.5 L54.5 27.5 L57 26.5 Z" opacity="0.9" />
+    <path d="M35 62 L35.8 63.8 L37.6 64.6 L35.8 65.4 L35 67.2 L34.2 65.4 L32.4 64.6 L34.2 63.8 Z" opacity="0.85" />
+  </g>
+
+  <!-- Back arc of white orbital trajectory -->
+  <ellipse
+    cx="52"
+    cy="47"
+    rx="45"
+    ry="14"
+    transform="rotate(-24 52 47)"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="2.1"
+    opacity="0.92"
+  />
+
+  <!-- Red aerodynamic vector chevron -->
+  <path
+    d="M11 63 L53 16 L60 18 L34 52 L98 22 L42 66 L29 66 Z"
+    fill="#FC3D21"
+  />
+
+  <!-- Crisp NASA lettering -->
+  <g fill="#FFFFFF" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="22.5" letter-spacing="1.2">
+    <text x="52" y="54.5" text-anchor="middle">NASA</text>
+  </g>
+
+  <!-- Front orbital sweep highlight -->
+  <path
+    d="M15 62 C36 70, 72 52, 92 26"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    opacity="0.9"
+  />
+</svg>
