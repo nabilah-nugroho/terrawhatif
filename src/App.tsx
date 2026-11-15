@@ -605,6 +605,9 @@ export default function App() {
     if (quest.allDone && !prev.allDone) {
       audioRef.current?.playMissionComplete();
       setCelebrateNonce((n) => n + 1);
+      window.setTimeout(() => {
+        voiceRef.current?.speakCheer();
+      }, 260);
       setCompletedChapters((prevSet) => {
         if (prevSet.has(stage)) return prevSet;
         const next = new Set(prevSet);

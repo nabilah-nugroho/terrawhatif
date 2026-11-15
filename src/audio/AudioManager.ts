@@ -620,7 +620,7 @@ export class AudioManager {
     });
   }
 
-  /** Celebratory 4-note arpeggio when all 3 chapter mission steps are completed. */
+  /** Celebratory arpeggio + joyful pup yips when a chapter mission completes. */
   public playMissionComplete(): void {
     if (this.disposed || this.muted) return;
     this.unlock();
@@ -656,6 +656,35 @@ export class AudioManager {
       shimmer.start(start);
       osc.stop(start + 0.68);
       shimmer.stop(start + 0.68);
+    });
+
+    // Playful happy pup double-yip while jumping
+    [0.34, 0.56].forEach((delay, idx) => {
+      const start = now + delay;
+      const osc = ctx.createOscillator();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      const base = idx === 0 ? 540 : 640;
+      osc.frequency.setValueAtTime(base, start);
+      osc.frequency.exponentialRampToValueAtTime(base * 1.48, start + 0.055);
+      osc.frequency.exponentialRampToValueAtTime(base * 1.05, start + 0.11);
+
+      filter.type = 'bandpass';
+      filter.frequency.value = 1100;
+      filter.Q.value = 1.6;
+
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.1, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(start);
+      osc.stop(start + 0.13);
     });
   }
 

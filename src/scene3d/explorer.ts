@@ -317,7 +317,7 @@ export function createExplorerSystem(textures: ObservatoryTextures): ExplorerSys
   group.rotation.y = facingYaw;
 
   const triggerCelebration = () => {
-    celebrateTime = 1.85;
+    celebrateTime = 2.85;
   };
 
   const triggerScan = (targetWorldPos: THREE.Vector3) => {
@@ -408,17 +408,18 @@ export function createExplorerSystem(textures: ObservatoryTextures): ExplorerSys
         bodyRig.position.y = prefersReduced ? 0 : Math.sin(tSec * 2.2) * 0.015;
       }
 
-      // Celebratory hop & right-arm wave on mission completion
+      // Celebratory multi-hop & joyful two-arm wave on mission completion
       if (celebrateTime > 0 && !prefersReduced) {
-        const prog = 1 - celebrateTime / 1.85;
-        const hop = Math.abs(Math.sin(prog * Math.PI * 2)) * 0.42;
+        const prog = 1 - celebrateTime / 2.85;
+        const hop = Math.abs(Math.sin(prog * Math.PI * 4)) * 0.48;
         bodyRig.position.y += hop;
-        rightArm.rotation.x = -2.35;
-        rightArm.rotation.z = -0.35 + Math.sin(prog * Math.PI * 8) * 0.35;
-        leftArm.rotation.z = 0.25;
+        rightArm.rotation.x = -2.42;
+        rightArm.rotation.z = -0.35 + Math.sin(prog * Math.PI * 10) * 0.36;
+        leftArm.rotation.x = -2.32;
+        leftArm.rotation.z = 0.35 - Math.sin(prog * Math.PI * 10) * 0.34;
         if (!isMoving) {
-          leftLeg.rotation.x = Math.sin(prog * Math.PI * 4) * 0.2;
-          rightLeg.rotation.x = -Math.sin(prog * Math.PI * 4) * 0.2;
+          leftLeg.rotation.x = Math.sin(prog * Math.PI * 8) * 0.24;
+          rightLeg.rotation.x = -Math.sin(prog * Math.PI * 8) * 0.24;
         }
       } else if (scanTime > 0 && !isMoving) {
         // Turn cleanly toward scanned landmark & extend scanner arm + holographic cone

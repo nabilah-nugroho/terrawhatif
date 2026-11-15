@@ -185,6 +185,62 @@ export class VoiceNarrator {
     return this.speakLine(chosen);
   }
 
+  public speakCheer(customText?: string): boolean {
+    if (
+      this.disposed ||
+      this.muted ||
+      typeof window === 'undefined' ||
+      !('speechSynthesis' in window) ||
+      typeof SpeechSynthesisUtterance === 'undefined'
+    ) {
+      return false;
+    }
+
+    if (!this.selectedVoice) {
+      this.resolveVoice();
+    }
+
+    const cheers = [
+      'Yaay! Mission complete!',
+      'Yaay! Great teamwork!',
+      'Yaay! We did it!',
+    ];
+    const text = customText ?? cheers[Math.floor(Math.random() * cheers.length)];
+
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      if (this.selectedVoice) {
+        utterance.voice = this.selectedVoice;
+      }
+      utterance.lang = this.selectedVoice?.lang || 'en-US';
+      utterance.rate = 0.98;
+      utterance.pitch = 1.18;
+      utterance.volume = 0.85;
+
+      utterance.onstart = () => {
+        if (this.disposed || this.muted) return;
+        this.speaking = true;
+        this.onSpeakingChange?.(true, text);
+      };
+
+      const finish = () => {
+        if (this.speaking) {
+          this.speaking = false;
+          this.onSpeakingChange?.(false, null);
+        }
+      };
+      utterance.onend = finish;
+      utterance.onerror = finish;
+
+      this.lastSpokenAt = Date.now();
+      window.speechSynthesis.speak(utterance);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   public stop(): void {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {

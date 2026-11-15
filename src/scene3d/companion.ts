@@ -369,7 +369,7 @@ export function createCompanionSystem(textures: ObservatoryTextures): CompanionS
   group.rotation.y = facingYaw;
 
   const triggerCelebration = () => {
-    celebrateTime = 2.1;
+    celebrateTime = 2.95;
   };
 
   const triggerScan = (targetWorldPos: THREE.Vector3) => {
@@ -520,11 +520,12 @@ export function createCompanionSystem(textures: ObservatoryTextures): CompanionS
 
       // Celebration happy zoom-hops
       if (celebrateTime > 0 && !prefersReduced) {
-        const prog = 1 - celebrateTime / 2.1;
-        const hop = Math.abs(Math.sin(prog * Math.PI * 4)) * 0.28;
+        const prog = 1 - celebrateTime / 2.95;
+        const hop = Math.abs(Math.sin(prog * Math.PI * 5 + 0.35)) * 0.36;
         bodyRig.position.y += hop;
-        bodyRig.rotation.x = -Math.sin(prog * Math.PI * 4) * 0.14;
-        headGroup.rotation.x = -0.15;
+        bodyRig.rotation.x = -Math.sin(prog * Math.PI * 5 + 0.35) * 0.16;
+        bodyRig.rotation.y = Math.sin(prog * Math.PI * 4) * 0.34;
+        headGroup.rotation.x = -0.18;
       } else if (scanTime > 0 && !isTrotting) {
         // Curious look toward scanned instrument + gentle ground beacon pulse
         const dx = scanTargetWorld.x - position.x;
@@ -541,6 +542,7 @@ export function createCompanionSystem(textures: ObservatoryTextures): CompanionS
         (pingRing.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - pProg);
       } else {
         pingRing.visible = false;
+        bodyRig.rotation.y *= 1 - Math.min(1, dt * 8);
         if (!isTrotting) {
           headGroup.rotation.x *= 1 - Math.min(1, dt * 5);
         }
