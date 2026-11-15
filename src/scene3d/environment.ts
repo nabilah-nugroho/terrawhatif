@@ -185,6 +185,7 @@ export function createEnvironmentSystem(
   const starDiskMat = trackMat(
     new THREE.MeshBasicMaterial({
       color: '#fffbeb',
+      toneMapped: false,
       fog: false,
     })
   );
@@ -196,7 +197,7 @@ export function createEnvironmentSystem(
       map: textures.radialGlow,
       color: '#fde047',
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.68,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       fog: false,
@@ -211,7 +212,7 @@ export function createEnvironmentSystem(
       map: textures.radialGlow,
       color: '#f59e0b',
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.28,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       fog: false,
@@ -226,7 +227,7 @@ export function createEnvironmentSystem(
     new THREE.MeshBasicMaterial({
       color: '#fde68a',
       transparent: true,
-      opacity: 0.055,
+      opacity: 0.032,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false,
@@ -411,11 +412,17 @@ export function createEnvironmentSystem(
   const floeCount = 34;
   const floeGeo = trackGeo(new THREE.CylinderGeometry(0.85, 1.0, 0.18, 6));
   const floeMat = trackMat(
-    new THREE.MeshStandardMaterial({
+    new THREE.MeshPhysicalMaterial({
       map: textures.iceColor,
-      color: '#dceeff',
-      roughness: 0.35,
-      metalness: 0.05,
+      normalMap: textures.iceNormal,
+      normalScale: new THREE.Vector2(0.75, 0.75),
+      roughnessMap: textures.iceRoughness,
+      color: '#cde7fa',
+      roughness: 0.55,
+      metalness: 0.04,
+      clearcoat: 0.28,
+      clearcoatRoughness: 0.28,
+      envMapIntensity: 0.75,
       flatShading: true,
     })
   );
@@ -466,16 +473,22 @@ export function createEnvironmentSystem(
   const matBasalt = trackMat(
     new THREE.MeshStandardMaterial({
       map: textures.rockColor,
+      normalMap: textures.rockNormal,
+      normalScale: new THREE.Vector2(0.9, 0.9),
+      roughnessMap: textures.rockRoughness,
       bumpMap: textures.rockBump,
-      bumpScale: 0.08,
+      bumpScale: 0.05,
       color: '#252f42',
-      roughness: 0.88,
+      roughness: 0.9,
       metalness: 0.08,
       flatShading: true,
     })
   );
   const matFarMountain = trackMat(
     new THREE.MeshStandardMaterial({
+      normalMap: textures.rockNormal,
+      normalScale: new THREE.Vector2(0.55, 0.55),
+      roughnessMap: textures.rockRoughness,
       color: '#141d2e',
       roughness: 0.94,
       metalness: 0.05,
@@ -533,34 +546,50 @@ export function createEnvironmentSystem(
   const matDeckTop = trackMat(
     new THREE.MeshStandardMaterial({
       map: textures.deckColor,
+      normalMap: textures.deckNormal,
+      normalScale: new THREE.Vector2(0.65, 0.65),
+      roughnessMap: textures.deckRoughness,
       bumpMap: textures.deckBump,
-      bumpScale: 0.03,
+      bumpScale: 0.02,
       color: '#2c3950',
-      roughness: 0.56,
-      metalness: 0.62,
+      roughness: 0.68,
+      metalness: 0.68,
+      envMapIntensity: 1.1,
     })
   );
   const matDeckCurb = trackMat(
     new THREE.MeshStandardMaterial({
+      normalMap: textures.metalNormal,
+      normalScale: new THREE.Vector2(0.35, 0.35),
+      roughnessMap: textures.metalRoughness,
       color: '#111827',
-      roughness: 0.72,
-      metalness: 0.35,
+      roughness: 0.78,
+      metalness: 0.45,
     })
   );
   const matRailSteel = trackMat(
     new THREE.MeshStandardMaterial({
+      normalMap: textures.metalNormal,
+      normalScale: new THREE.Vector2(0.3, 0.3),
+      roughnessMap: textures.metalRoughness,
       color: '#94a3b8',
-      roughness: 0.3,
-      metalness: 0.85,
+      roughness: 0.36,
+      metalness: 0.88,
+      envMapIntensity: 1.25,
     })
   );
   const matGlassBarrier = trackMat(
     new THREE.MeshPhysicalMaterial({
       color: '#bae6fd',
-      roughness: 0.1,
+      roughness: 0.06,
       metalness: 0.05,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.08,
+      ior: 1.5,
+      reflectivity: 0.92,
+      envMapIntensity: 1.45,
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.2,
     })
   );
 
@@ -572,12 +601,14 @@ export function createEnvironmentSystem(
 
   const deckCurb = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(18.0, 0.24, 7.1)), matDeckCurb);
   deckCurb.position.set(0.8, -0.02, 4.5);
+  deckCurb.receiveShadow = true;
   deckGroup.add(deckCurb);
 
   // Front safety railing along central ocean edge (x in [-5.6, 6.3]), leaving portals open to left/right ramps
   const topRail = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.038, 0.038, 12.0, 12)), matRailSteel);
   topRail.rotation.z = Math.PI / 2;
   topRail.position.set(0.35, 1.02, 1.2);
+  topRail.castShadow = true;
   deckGroup.add(topRail);
 
   const glassWall = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(11.9, 0.68, 0.04)), matGlassBarrier);
@@ -587,6 +618,7 @@ export function createEnvironmentSystem(
   for (let px = -5.6; px <= 6.35; px += 2.38) {
     const post = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.04, 0.045, 0.78, 10)), matRailSteel);
     post.position.set(px, 0.65, 1.2);
+    post.castShadow = true;
     deckGroup.add(post);
   }
 
@@ -762,7 +794,7 @@ export function createEnvironmentSystem(
 
       if (scene.fog instanceof THREE.FogExp2) {
         scene.fog.color.copy(state.horizonColor);
-        scene.fog.density = 0.0082 + state.vaporIntensity * 0.0055;
+        scene.fog.density = 0.0112 + state.vaporIntensity * 0.0068;
       }
 
       // 2. Stars & Aurora
@@ -771,14 +803,14 @@ export function createEnvironmentSystem(
         auroraMats[b].opacity = state.starAlpha * (0.16 + 0.06 * Math.sin(tSec * 0.7 + b));
       }
 
-      // 3. Host Star Size & Corona
+      // 3. Host Star Size & Corona (boosted cleanly above bloom threshold for selective star glow)
       const visualScale =
         state.angularSizeRatio <= 1
           ? Math.max(0.6, state.angularSizeRatio)
           : 1 + Math.pow(state.angularSizeRatio - 1, 0.78) * 0.92;
       const clampedStarScale = Math.min(3.8, visualScale);
       starGroup.scale.setScalar(clampedStarScale);
-      starDiskMat.color.copy(state.sunColor).lerp(_c1.set('#ffffff'), 0.45);
+      starDiskMat.color.copy(state.sunColor).lerp(_c1.set('#ffffff'), 0.38).multiplyScalar(1.12);
       coronaInnerMat.color.copy(state.sunColor);
       coronaOuterMat.color.copy(state.sunColor).lerp(state.horizonColor, 0.35);
       rayMat.color.copy(state.sunColor);

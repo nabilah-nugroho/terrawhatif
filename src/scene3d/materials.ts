@@ -3,10 +3,18 @@ import * as THREE from 'three';
 export interface ObservatoryTextures {
   deckColor: THREE.CanvasTexture;
   deckBump: THREE.CanvasTexture;
+  deckNormal: THREE.CanvasTexture;
+  deckRoughness: THREE.CanvasTexture;
   rockColor: THREE.CanvasTexture;
   rockBump: THREE.CanvasTexture;
+  rockNormal: THREE.CanvasTexture;
+  rockRoughness: THREE.CanvasTexture;
   iceColor: THREE.CanvasTexture;
   iceBump: THREE.CanvasTexture;
+  iceNormal: THREE.CanvasTexture;
+  iceRoughness: THREE.CanvasTexture;
+  metalNormal: THREE.CanvasTexture;
+  metalRoughness: THREE.CanvasTexture;
   oceanNormal: THREE.CanvasTexture;
   earthColor: THREE.CanvasTexture;
   earthClouds: THREE.CanvasTexture;
@@ -27,6 +35,47 @@ function makeCanvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingCo
   canvas.height = h;
   const ctx = canvas.getContext('2d')!;
   return [canvas, ctx];
+}
+
+function heightCanvasToNormalCanvas(
+  src: HTMLCanvasElement,
+  strength: number
+): HTMLCanvasElement {
+  const w = src.width;
+  const h = src.height;
+  const srcCtx = src.getContext('2d')!;
+  const srcData = srcCtx.getImageData(0, 0, w, h).data;
+  const [outCanvas, outCtx] = makeCanvas(w, h);
+  const outImg = outCtx.createImageData(w, h);
+  const dst = outImg.data;
+
+  const sample = (x: number, y: number): number => {
+    const wx = ((x % w) + w) % w;
+    const wy = ((y % h) + h) % h;
+    return srcData[(wy * w + wx) * 4] / 255;
+  };
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const hL = sample(x - 1, y);
+      const hR = sample(x + 1, y);
+      const hD = sample(x, y - 1);
+      const hU = sample(x, y + 1);
+
+      const dx = (hL - hR) * strength;
+      const dy = (hD - hU) * strength;
+      const dz = 1.0;
+      const invLen = 1 / Math.hypot(dx, dy, dz);
+
+      const idx = (y * w + x) * 4;
+      dst[idx] = Math.round((dx * invLen * 0.5 + 0.5) * 255);
+      dst[idx + 1] = Math.round((dy * invLen * 0.5 + 0.5) * 255);
+      dst[idx + 2] = Math.round((dz * invLen * 0.5 + 0.5) * 255);
+      dst[idx + 3] = 255;
+    }
+  }
+  outCtx.putImageData(outImg, 0, 0);
+  return outCanvas;
 }
 
 function configureColorTex(
@@ -62,28 +111,50 @@ function configureDataTex(
 }
 
 export function createObservatoryTextures(maxAniso: number): ObservatoryTextures {
-  // 1. Brushed Observatory Deck Metal & Seam Plates
+  // 1. Brushed Observatory Deck Metal & Seam Plates (Color + Bump + Normal + Roughness)
   const [deckColC, deckColCtx] = makeCanvas(512, 512);
   const [deckBmpC, deckBmpCtx] = makeCanvas(512, 512);
+  const [deckRghC, deckRghCtx] = makeCanvas(512, 512);
   deckColCtx.fillStyle = '#1c2638';
   deckColCtx.fillRect(0, 0, 512, 512);
   deckBmpCtx.fillStyle = '#808080';
   deckBmpCtx.fillRect(0, 0, 512, 512);
+  deckRghCtx.fillStyle = '#8a8a8a';
+  deckRghCtx.fillRect(0, 0, 512, 512);
 
-  for (let i = 0; i < 650; i++) {
+  for (let i = 0; i < 750; i++) {
     const y = seeded(i * 3) * 512;
     const shade = 26 + Math.floor(seeded(i * 3 + 1) * 18);
     deckColCtx.fillStyle = `rgba(${shade + 6}, ${shade + 14}, ${shade + 28}, 0.28)`;
     deckColCtx.fillRect(0, y, 512, 1.5);
-    const bShade = 115 + Math.floor(seeded(i * 3 + 2) * 30);
+    const bShade = 115 + Math.floor(seeded(i * 3 + 2) * 32);
     deckBmpCtx.fillStyle = `rgb(${bShade},${bShade},${bShade})`;
     deckBmpCtx.fillRect(0, y, 512, 1);
+
+    const rShade = 95 + Math.floor(seeded(i * 3 + 7) * 75);
+    deckRghCtx.fillStyle = `rgba(${rShade},${rShade},${rShade},0.35)`;
+    deckRghCtx.fillRect(seeded(i * 4) * 260, y, 120 + seeded(i * 5) * 240, 1.5);
+  }
+  // Subtle specular wear patches across plate centers
+  for (let i = 0; i < 48; i++) {
+    const wx = seeded(i * 9 + 1) * 512;
+    const wy = seeded(i * 9 + 2) * 512;
+    const wr = 18 + seeded(i * 9 + 3) * 44;
+    const wg = deckRghCtx.createRadialGradient(wx, wy, 2, wx, wy, wr);
+    wg.addColorStop(0, 'rgba(65,65,65,0.36)');
+    wg.addColorStop(1, 'rgba(135,135,135,0)');
+    deckRghCtx.fillStyle = wg;
+    deckRghCtx.beginPath();
+    deckRghCtx.arc(wx, wy, wr, 0, Math.PI * 2);
+    deckRghCtx.fill();
   }
   // Panel grid seams + corner rivets
   deckColCtx.strokeStyle = '#0e1522';
   deckColCtx.lineWidth = 4;
   deckBmpCtx.strokeStyle = '#2a2a2a';
   deckBmpCtx.lineWidth = 5;
+  deckRghCtx.strokeStyle = '#dcdcdc';
+  deckRghCtx.lineWidth = 5;
   for (let gx = 0; gx <= 512; gx += 128) {
     deckColCtx.beginPath();
     deckColCtx.moveTo(gx, 0);
@@ -93,6 +164,10 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
     deckBmpCtx.moveTo(gx, 0);
     deckBmpCtx.lineTo(gx, 512);
     deckBmpCtx.stroke();
+    deckRghCtx.beginPath();
+    deckRghCtx.moveTo(gx, 0);
+    deckRghCtx.lineTo(gx, 512);
+    deckRghCtx.stroke();
   }
   for (let gy = 0; gy <= 512; gy += 128) {
     deckColCtx.beginPath();
@@ -103,6 +178,10 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
     deckBmpCtx.moveTo(0, gy);
     deckBmpCtx.lineTo(512, gy);
     deckBmpCtx.stroke();
+    deckRghCtx.beginPath();
+    deckRghCtx.moveTo(0, gy);
+    deckRghCtx.lineTo(512, gy);
+    deckRghCtx.stroke();
   }
   for (let gx = 0; gx < 512; gx += 128) {
     for (let gy = 0; gy < 512; gy += 128) {
@@ -121,20 +200,29 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
         deckBmpCtx.beginPath();
         deckBmpCtx.arc(rx, ry, 2.8, 0, Math.PI * 2);
         deckBmpCtx.fill();
+        deckRghCtx.fillStyle = '#5c5c5c';
+        deckRghCtx.beginPath();
+        deckRghCtx.arc(rx, ry, 3.0, 0, Math.PI * 2);
+        deckRghCtx.fill();
       }
     }
   }
   const deckColor = configureColorTex(deckColC, 4, 3, maxAniso);
   const deckBump = configureDataTex(deckBmpC, 4, 3, maxAniso);
+  const deckNormal = configureDataTex(heightCanvasToNormalCanvas(deckBmpC, 2.6), 4, 3, maxAniso);
+  const deckRoughness = configureDataTex(deckRghC, 4, 3, maxAniso);
 
-  // 2. Volcanic Basalt Rock
+  // 2. Volcanic Basalt Rock (Color + Bump + Normal + Roughness)
   const [rockColC, rockColCtx] = makeCanvas(512, 512);
   const [rockBmpC, rockBmpCtx] = makeCanvas(512, 512);
+  const [rockRghC, rockRghCtx] = makeCanvas(512, 512);
   rockColCtx.fillStyle = '#1b2230';
   rockColCtx.fillRect(0, 0, 512, 512);
   rockBmpCtx.fillStyle = '#7c7c7c';
   rockBmpCtx.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 420; i++) {
+  rockRghCtx.fillStyle = '#c8c8c8';
+  rockRghCtx.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 460; i++) {
     const x = seeded(i * 5 + 1) * 512;
     const y = seeded(i * 5 + 2) * 512;
     const w = 18 + seeded(i * 5 + 3) * 65;
@@ -142,16 +230,22 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
     const v = 18 + Math.floor(seeded(i * 5 + 5) * 28);
     rockColCtx.fillStyle = `rgba(${v}, ${v + 7}, ${v + 18}, 0.45)`;
     rockColCtx.fillRect(x, y, w, h);
-    const bv = 75 + Math.floor(seeded(i * 5 + 5) * 110);
-    rockBmpCtx.fillStyle = `rgba(${bv},${bv},${bv},0.42)`;
+    const bv = 70 + Math.floor(seeded(i * 5 + 5) * 120);
+    rockBmpCtx.fillStyle = `rgba(${bv},${bv},${bv},0.46)`;
     rockBmpCtx.fillRect(x, y, w, h);
+    const rv = 155 + Math.floor(seeded(i * 5 + 8) * 85);
+    rockRghCtx.fillStyle = `rgba(${rv},${rv},${rv},0.42)`;
+    rockRghCtx.fillRect(x, y, w, h);
   }
   const rockColor = configureColorTex(rockColC, 3, 2, maxAniso);
   const rockBump = configureDataTex(rockBmpC, 3, 2, maxAniso);
+  const rockNormal = configureDataTex(heightCanvasToNormalCanvas(rockBmpC, 3.2), 3, 2, maxAniso);
+  const rockRoughness = configureDataTex(rockRghC, 3, 2, maxAniso);
 
-  // 3. Glacial Crystalline Ice
+  // 3. Glacial Crystalline Ice (Color + Bump + Normal + Roughness)
   const [iceColC, iceColCtx] = makeCanvas(512, 512);
   const [iceBmpC, iceBmpCtx] = makeCanvas(512, 512);
+  const [iceRghC, iceRghCtx] = makeCanvas(512, 512);
   const iceGrad = iceColCtx.createLinearGradient(0, 0, 512, 512);
   iceGrad.addColorStop(0, '#eef7ff');
   iceGrad.addColorStop(0.5, '#cfe8fa');
@@ -160,8 +254,10 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
   iceColCtx.fillRect(0, 0, 512, 512);
   iceBmpCtx.fillStyle = '#888888';
   iceBmpCtx.fillRect(0, 0, 512, 512);
+  iceRghCtx.fillStyle = '#555555';
+  iceRghCtx.fillRect(0, 0, 512, 512);
 
-  for (let i = 0; i < 160; i++) {
+  for (let i = 0; i < 180; i++) {
     const x1 = seeded(i * 4 + 1) * 512;
     const y1 = seeded(i * 4 + 2) * 512;
     const x2 = x1 + (seeded(i * 4 + 3) - 0.5) * 130;
@@ -173,15 +269,45 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
     iceColCtx.lineTo(x2, y2);
     iceColCtx.stroke();
 
-    iceBmpCtx.strokeStyle = i % 2 === 0 ? '#d8d8d8' : '#404040';
-    iceBmpCtx.lineWidth = 2;
+    iceBmpCtx.strokeStyle = i % 2 === 0 ? '#e0e0e0' : '#3a3a3a';
+    iceBmpCtx.lineWidth = 2.2;
     iceBmpCtx.beginPath();
     iceBmpCtx.moveTo(x1, y1);
     iceBmpCtx.lineTo(x2, y2);
     iceBmpCtx.stroke();
+
+    iceRghCtx.strokeStyle = i % 2 === 0 ? 'rgba(180,180,180,0.45)' : 'rgba(42,42,42,0.55)';
+    iceRghCtx.lineWidth = 3;
+    iceRghCtx.beginPath();
+    iceRghCtx.moveTo(x1, y1);
+    iceRghCtx.lineTo(x2, y2);
+    iceRghCtx.stroke();
   }
   const iceColor = configureColorTex(iceColC, 2, 2, maxAniso);
   const iceBump = configureDataTex(iceBmpC, 2, 2, maxAniso);
+  const iceNormal = configureDataTex(heightCanvasToNormalCanvas(iceBmpC, 2.8), 2, 2, maxAniso);
+  const iceRoughness = configureDataTex(iceRghC, 2, 2, maxAniso);
+
+  // 3b. Brushed Instrument Metal Micro-Surface (Normal + Roughness)
+  const [metalBmpC, metalBmpCtx] = makeCanvas(256, 256);
+  const [metalRghC, metalRghCtx] = makeCanvas(256, 256);
+  metalBmpCtx.fillStyle = '#808080';
+  metalBmpCtx.fillRect(0, 0, 256, 256);
+  metalRghCtx.fillStyle = '#787878';
+  metalRghCtx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 420; i++) {
+    const y = seeded(i * 6 + 1) * 256;
+    const x = seeded(i * 6 + 2) * 256;
+    const len = 36 + seeded(i * 6 + 3) * 140;
+    const bVal = 112 + Math.floor(seeded(i * 6 + 4) * 34);
+    const rVal = 84 + Math.floor(seeded(i * 6 + 5) * 70);
+    metalBmpCtx.fillStyle = `rgba(${bVal},${bVal},${bVal},0.48)`;
+    metalBmpCtx.fillRect(x, y, len, 1);
+    metalRghCtx.fillStyle = `rgba(${rVal},${rVal},${rVal},0.38)`;
+    metalRghCtx.fillRect(x, y, len, 1.5);
+  }
+  const metalNormal = configureDataTex(heightCanvasToNormalCanvas(metalBmpC, 1.6), 2, 2, maxAniso);
+  const metalRoughness = configureDataTex(metalRghC, 2, 2, maxAniso);
 
   // 4. Seamless Ocean Normal Map (sine wave derivative field)
   const [oceanC, oceanCtx] = makeCanvas(256, 256);
@@ -350,10 +476,18 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
   const all = [
     deckColor,
     deckBump,
+    deckNormal,
+    deckRoughness,
     rockColor,
     rockBump,
+    rockNormal,
+    rockRoughness,
     iceColor,
     iceBump,
+    iceNormal,
+    iceRoughness,
+    metalNormal,
+    metalRoughness,
     oceanNormal,
     earthColor,
     earthClouds,
@@ -365,10 +499,18 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
   return {
     deckColor,
     deckBump,
+    deckNormal,
+    deckRoughness,
     rockColor,
     rockBump,
+    rockNormal,
+    rockRoughness,
     iceColor,
     iceBump,
+    iceNormal,
+    iceRoughness,
+    metalNormal,
+    metalRoughness,
     oceanNormal,
     earthColor,
     earthClouds,

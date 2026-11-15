@@ -21,6 +21,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { AudioManager } from './audio/AudioManager';
+import { VoiceNarrator, type VoiceContext } from './audio/VoiceNarrator';
 import { STARS, simulate } from './engine/physics.js';
 import starsData from './engine/stars.json';
 import trendsData from './engine/trends.json';
@@ -101,6 +102,8 @@ export default function App() {
   });
 
   const audioRef = useRef<AudioManager | null>(null);
+  const voiceRef = useRef<VoiceNarrator | null>(null);
+  const [terraSpokenLine, setTerraSpokenLine] = useState<string | null>(null);
   const [soundMuted, setSoundMuted] = useState(false);
   const [hudHidden, setHudHidden] = useState(false);
   const [thirdPersonMode, setThirdPersonMode] = useState(true);
@@ -388,12 +391,60 @@ export default function App() {
         ? 'hot'
         : 'temperate';
 
+  const voiceCtxRef = useRef<VoiceContext>({
+    mood,
+    starKey: params.starKey,
+    stage,
+    tempC: simResult.T_surface - 273.15,
+    runaway: simResult.runaway,
+  });
+  useEffect(() => {
+    voiceCtxRef.current = {
+      mood,
+      starKey: params.starKey,
+      stage,
+      tempC: simResult.T_surface - 273.15,
+      runaway: simResult.runaway,
+    };
+  }, [mood, params.starKey, stage, simResult.T_surface, simResult.runaway]);
+
+  const gameplayVoiceEligibleRef = useRef(false);
+  useEffect(() => {
+    gameplayVoiceEligibleRef.current =
+      stage !== 'INTRO' &&
+      !soundMuted &&
+      !storyStage &&
+      !tourOpen &&
+      !scienceLabOpen &&
+      !miniPredOpen &&
+      !badgesOpen &&
+      !debriefOpen &&
+      !helpOpen;
+  }, [
+    stage,
+    soundMuted,
+    storyStage,
+    tourOpen,
+    scienceLabOpen,
+    miniPredOpen,
+    badgesOpen,
+    debriefOpen,
+    helpOpen,
+  ]);
+
   useEffect(() => {
     const manager = new AudioManager();
     audioRef.current = manager;
     manager.setMuted(soundMuted);
     manager.setMood(mood);
     manager.setIntroMusicActive(stage === 'INTRO');
+
+    const narrator = new VoiceNarrator((speaking, text) => {
+      manager.setVoiceDucking(speaking);
+      setTerraSpokenLine(speaking ? text : null);
+    });
+    narrator.setMuted(soundMuted);
+    voiceRef.current = narrator;
 
     const unlockOnce = () => {
       if (!manager.isMuted()) {
@@ -408,6 +459,8 @@ export default function App() {
       window.removeEventListener('keydown', unlockOnce);
       if (trendTimerRef.current !== undefined) window.clearInterval(trendTimerRef.current);
       if (trendEndTimerRef.current !== undefined) window.clearTimeout(trendEndTimerRef.current);
+      narrator.dispose();
+      voiceRef.current = null;
       manager.dispose();
       audioRef.current = null;
     };
@@ -420,6 +473,9 @@ export default function App() {
 
   useEffect(() => {
     audioRef.current?.setIntroMusicActive(stage === 'INTRO');
+    if (stage === 'INTRO') {
+      voiceRef.current?.stop();
+    }
   }, [stage]);
 
   useEffect(() => {
@@ -433,6 +489,96 @@ export default function App() {
             : null;
     audioRef.current?.setStoryChapter(ch);
   }, [storyStage]);
+
+  // Occasional calm ambient voice lines throughout active gameplay
+  const hasSpokenWelcomeRef = useRef(false);
+  const prevVoiceMoodRef = useRef<TerraMood>(mood);
+  const prevVoiceStarRef = useRef<StarKey>(params.starKey);
+
+  useEffect(() => {
+    if (
+      stage === 'INTRO' ||
+      soundMuted ||
+      storyStage ||
+      tourOpen ||
+      scienceLabOpen ||
+      miniPredOpen ||
+      badgesOpen ||
+      debriefOpen ||
+      helpOpen
+    ) {
+      return;
+    }
+
+    let timeoutId: number | undefined;
+    let cancelled = false;
+
+    const scheduleNext = (delayMs: number, forceGeneral = false) => {
+      timeoutId = window.setTimeout(() => {
+        if (cancelled) return;
+        const narrator = voiceRef.current;
+        if (
+          narrator &&
+          gameplayVoiceEligibleRef.current &&
+          !narrator.isSpeaking() &&
+          Date.now() - narrator.getLastSpokenAt() > 16000
+        ) {
+          audioRef.current?.playCommsChirp();
+          narrator.speakContextual(voiceCtxRef.current, forceGeneral);
+        }
+        if (!cancelled) {
+          scheduleNext(28000 + Math.random() * 11000, false);
+        }
+      }, delayMs);
+    };
+
+    if (!hasSpokenWelcomeRef.current) {
+      hasSpokenWelcomeRef.current = true;
+      scheduleNext(6500, true);
+    } else {
+      scheduleNext(26000 + Math.random() * 9000, false);
+    }
+
+    return () => {
+      cancelled = true;
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    };
+  }, [
+    stage,
+    soundMuted,
+    storyStage,
+    tourOpen,
+    scienceLabOpen,
+    miniPredOpen,
+    badgesOpen,
+    debriefOpen,
+    helpOpen,
+  ]);
+
+  // Trigger a contextual voice observation on major climate mood or host-star shifts (throttled)
+  useEffect(() => {
+    const moodChanged = prevVoiceMoodRef.current !== mood;
+    const starChanged = prevVoiceStarRef.current !== params.starKey;
+    prevVoiceMoodRef.current = mood;
+    prevVoiceStarRef.current = params.starKey;
+
+    if ((!moodChanged && !starChanged) || !gameplayVoiceEligibleRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      const narrator = voiceRef.current;
+      if (
+        narrator &&
+        gameplayVoiceEligibleRef.current &&
+        !narrator.isSpeaking() &&
+        Date.now() - narrator.getLastSpokenAt() > 18000
+      ) {
+        audioRef.current?.playCommsChirp();
+        narrator.speakContextual(voiceCtxRef.current, false);
+      }
+    }, 1400);
+
+    return () => window.clearTimeout(timer);
+  }, [mood, params.starKey]);
 
   // Rewarding audio & intuitive explanation when a step or full chapter mission completes
   useEffect(() => {
@@ -585,6 +731,7 @@ export default function App() {
   const handleToggleSound = () => {
     if (!audioRef.current) return;
     const nextMuted = audioRef.current.toggleMute();
+    voiceRef.current?.setMuted(nextMuted);
     setSoundMuted(nextMuted);
   };
 
@@ -1113,9 +1260,17 @@ export default function App() {
               <TerraAvatar size={42} mood={mood} className="shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-mono font-medium text-sky-300">
-                    TERRA · {quest.allDone ? 'Mission Complete' : `Step ${quest.activeStepIndex + 1} of 3`}
-                  </span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-[11px] font-mono font-medium text-sky-300 truncate">
+                      TERRA · {quest.allDone ? 'Mission Complete' : `Step ${quest.activeStepIndex + 1} of 3`}
+                    </span>
+                    {terraSpokenLine && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-200 shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
+                        <span>Voice</span>
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => setTerraCollapsedMobile((v) => !v)}
@@ -1142,6 +1297,12 @@ export default function App() {
                         quest.currentTerraText
                       )}
                     </p>
+
+                    {terraSpokenLine && (
+                      <p className="mt-1.5 pt-1.5 border-t border-white/10 text-[11px] italic text-sky-200/90 leading-snug">
+                        “{terraSpokenLine}”
+                      </p>
+                    )}
 
                     {quest.allDone && (
                       <div className="mt-2 pt-2 border-t border-white/10 space-y-1">

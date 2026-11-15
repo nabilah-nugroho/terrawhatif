@@ -64,46 +64,64 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
     return m;
   };
 
-  // Shared high-contrast PBR materials
+  // Shared high-contrast PBR materials with procedural micro-detail maps
   const matDarkSteel = trackMat(
     new THREE.MeshStandardMaterial({
+      normalMap: textures.metalNormal,
+      normalScale: new THREE.Vector2(0.4, 0.4),
+      roughnessMap: textures.metalRoughness,
       color: '#1f293b',
-      roughness: 0.45,
-      metalness: 0.78,
+      roughness: 0.56,
+      metalness: 0.82,
+      envMapIntensity: 1.15,
     })
   );
   const matBrushedAlum = trackMat(
     new THREE.MeshStandardMaterial({
+      normalMap: textures.metalNormal,
+      normalScale: new THREE.Vector2(0.32, 0.32),
+      roughnessMap: textures.metalRoughness,
       color: '#cbd5e1',
-      roughness: 0.28,
-      metalness: 0.85,
+      roughness: 0.38,
+      metalness: 0.88,
+      envMapIntensity: 1.3,
     })
   );
   const matBrass = trackMat(
     new THREE.MeshStandardMaterial({
+      normalMap: textures.metalNormal,
+      normalScale: new THREE.Vector2(0.28, 0.28),
+      roughnessMap: textures.metalRoughness,
       color: '#d9a441',
-      roughness: 0.3,
-      metalness: 0.86,
+      roughness: 0.36,
+      metalness: 0.9,
+      envMapIntensity: 1.35,
     })
   );
   const matGlass = trackMat(
     new THREE.MeshPhysicalMaterial({
       color: '#dff4ff',
-      roughness: 0.08,
-      metalness: 0.05,
+      roughness: 0.05,
+      metalness: 0.04,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.06,
+      ior: 1.5,
+      reflectivity: 0.95,
+      envMapIntensity: 1.5,
       transparent: true,
-      opacity: 0.38,
-      transmission: 0.45,
-      ior: 1.48,
+      opacity: 0.34,
     })
   );
   const matStonePlinth = trackMat(
     new THREE.MeshStandardMaterial({
       map: textures.rockColor,
+      normalMap: textures.rockNormal,
+      normalScale: new THREE.Vector2(0.85, 0.85),
+      roughnessMap: textures.rockRoughness,
       bumpMap: textures.rockBump,
-      bumpScale: 0.05,
+      bumpScale: 0.04,
       color: '#4b5568',
-      roughness: 0.88,
+      roughness: 0.9,
       metalness: 0.08,
     })
   );
@@ -232,9 +250,9 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
       new THREE.MeshStandardMaterial({
         color: '#34d399',
         emissive: '#10b981',
-        emissiveIntensity: 0.75,
-        roughness: 0.22,
-        metalness: 0.35,
+        emissiveIntensity: 1.05,
+        roughness: 0.2,
+        metalness: 0.32,
       })
     );
     const mercuryBulb = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.16, 18, 14)), mercuryMat);
@@ -290,21 +308,32 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
     g.position.set(-6.6, 0.0, -3.5);
 
     const matIcePrimary = trackMat(
-      new THREE.MeshStandardMaterial({
+      new THREE.MeshPhysicalMaterial({
         map: textures.iceColor,
+        normalMap: textures.iceNormal,
+        normalScale: new THREE.Vector2(0.85, 0.85),
+        roughnessMap: textures.iceRoughness,
         bumpMap: textures.iceBump,
-        bumpScale: 0.08,
-        color: '#e6f5ff',
-        roughness: 0.25,
-        metalness: 0.08,
+        bumpScale: 0.05,
+        color: '#d4ecfc',
+        roughness: 0.48,
+        metalness: 0.05,
+        clearcoat: 0.32,
+        clearcoatRoughness: 0.24,
+        envMapIntensity: 0.8,
         flatShading: true,
       })
     );
     const matIceDeep = trackMat(
-      new THREE.MeshStandardMaterial({
+      new THREE.MeshPhysicalMaterial({
+        normalMap: textures.iceNormal,
+        normalScale: new THREE.Vector2(0.6, 0.6),
+        roughnessMap: textures.iceRoughness,
         color: '#8bc8f0',
-        roughness: 0.38,
-        metalness: 0.05,
+        roughness: 0.48,
+        metalness: 0.04,
+        clearcoat: 0.35,
+        clearcoatRoughness: 0.28,
         flatShading: true,
       })
     );
@@ -404,9 +433,12 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
     wheelGroup.position.set(0, 0.98, 0);
     const matWheel = trackMat(
       new THREE.MeshStandardMaterial({
+        normalMap: textures.metalNormal,
+        normalScale: new THREE.Vector2(0.25, 0.25),
+        roughnessMap: textures.metalRoughness,
         color: '#f97316',
-        roughness: 0.35,
-        metalness: 0.45,
+        roughness: 0.42,
+        metalness: 0.48,
       })
     );
     const rim = new THREE.Mesh(trackGeo(new THREE.TorusGeometry(0.42, 0.055, 12, 28)), matWheel);
@@ -485,8 +517,8 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
       new THREE.MeshStandardMaterial({
         color: '#38bdf8',
         emissive: '#0284c7',
-        emissiveIntensity: 0.45,
-        roughness: 0.25,
+        emissiveIntensity: 0.85,
+        roughness: 0.22,
         metalness: 0.4,
       })
     );
@@ -533,9 +565,12 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
 
     const matBuoyYellow = trackMat(
       new THREE.MeshStandardMaterial({
+        normalMap: textures.metalNormal,
+        normalScale: new THREE.Vector2(0.3, 0.3),
+        roughnessMap: textures.metalRoughness,
         color: '#f59e0b',
-        roughness: 0.42,
-        metalness: 0.25,
+        roughness: 0.48,
+        metalness: 0.32,
       })
     );
     const hull = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.68, 0.56, 0.32, 20)), matBuoyYellow);
@@ -555,8 +590,8 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
       new THREE.MeshStandardMaterial({
         color: '#7dd3fc',
         emissive: '#38bdf8',
-        emissiveIntensity: 0.85,
-        roughness: 0.2,
+        emissiveIntensity: 1.18,
+        roughness: 0.18,
       })
     );
     const beacon = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.14, 14, 12)), beaconMat);
@@ -633,9 +668,13 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
 
     const domeMat = trackMat(
       new THREE.MeshStandardMaterial({
+        normalMap: textures.metalNormal,
+        normalScale: new THREE.Vector2(0.28, 0.28),
+        roughnessMap: textures.metalRoughness,
         color: '#dbe6f5',
-        roughness: 0.35,
-        metalness: 0.62,
+        roughness: 0.42,
+        metalness: 0.68,
+        envMapIntensity: 1.25,
       })
     );
     const dome = new THREE.Mesh(
@@ -788,11 +827,14 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
       new THREE.MeshPhysicalMaterial({
         color: '#7dd3fc',
         emissive: '#0ea5e9',
-        emissiveIntensity: 0.35,
+        emissiveIntensity: 0.78,
         roughness: 0.08,
         metalness: 0.1,
+        clearcoat: 0.8,
+        clearcoatRoughness: 0.1,
+        ior: 1.54,
         transparent: true,
-        opacity: 0.85,
+        opacity: 0.86,
       })
     );
     const prism = new THREE.Mesh(trackGeo(new THREE.OctahedronGeometry(0.28, 0)), prismMat);
@@ -856,15 +898,15 @@ export function createLandmarksSystem(textures: ObservatoryTextures): LandmarksS
       new THREE.MeshStandardMaterial({
         color: '#fbbf24',
         emissive: '#f59e0b',
-        emissiveIntensity: 0.45,
-        roughness: 0.32,
+        emissiveIntensity: 0.58,
+        roughness: 0.34,
       })
     );
     const nightMat = trackMat(
       new THREE.MeshStandardMaterial({
         color: '#0f172a',
         emissive: '#1e293b',
-        emissiveIntensity: 0.25,
+        emissiveIntensity: 0.35,
         roughness: 0.68,
       })
     );

@@ -8,6 +8,10 @@ import { createObservatoryTextures } from '../scene3d/materials';
 import { createEnvironmentSystem } from '../scene3d/environment';
 import { createLandmarksSystem } from '../scene3d/landmarks';
 import { createExplorerSystem } from '../scene3d/explorer';
+import {
+  createPostProcessingPipeline,
+  type PostProcessingPipeline,
+} from '../scene3d/postprocessing';
 
 export type CameraPresetId = 'observatory' | 'earth' | 'ice';
 
@@ -104,6 +108,9 @@ const _introGoalTarget = new THREE.Vector3();
 const _wpTarget = new THREE.Vector3();
 const _wpStep = new THREE.Vector3();
 const _wpLook = new THREE.Vector3();
+const _camRight = new THREE.Vector3();
+const _camUp = new THREE.Vector3();
+const _breathOffset = new THREE.Vector3();
 
 function detectSoftwareWebGL(): boolean {
   try {
@@ -296,27 +303,33 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
     const width = mount.clientWidth || window.innerWidth;
     const height = mount.clientHeight || window.innerHeight;
 
+    const pixelRatio = isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2);
     const renderer = new THREE.WebGLRenderer({
       antialias: !isSoftwareGl,
       powerPreference: 'high-performance',
     });
-    renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(pixelRatio);
     renderer.setSize(width, height);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.08;
+    renderer.toneMappingExposure = 0.82;
     renderer.shadowMap.enabled = !isSoftwareGl;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.autoUpdate = true;
     renderer.domElement.style.display = 'block';
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(simRef.current.skyColors.horizon, 0.0082);
+    scene.fog = new THREE.FogExp2(simRef.current.skyColors.horizon, 0.0112);
 
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.25, 220);
 
-    const explorer = createExplorerSystem();
+    // Procedural Textures created up front so PBR maps wire into explorer, environment & landmarks
+    const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    const textures = createObservatoryTextures(maxAniso);
+
+    const explorer = createExplorerSystem(textures);
     explorerRef.current = explorer;
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -344,49 +357,74 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
     }
     controls.update();
 
+    let isUserDragging = false;
     const cancelPresetOnDrag = () => {
       camTransitionRef.current.active = false;
       introSweepActive = false;
+      isUserDragging = true;
+    };
+    const onControlEnd = () => {
+      isUserDragging = false;
     };
     controls.addEventListener('start', cancelPresetOnDrag);
+    controls.addEventListener('end', onControlEnd);
 
-    // Environment reflection map via PMREM + RoomEnvironment
+    // Environment reflection map via PMREM + RoomEnvironment (kept low so shadows stay rich)
     const pmrem = new THREE.PMREMGenerator(renderer);
     const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
     scene.environment = envRT.texture;
-    scene.environmentIntensity = 0.72;
+    scene.environmentIntensity = 0.36;
 
-    // Scene lighting: key sun directional + soft sky/ocean hemisphere
-    const hemiLight = new THREE.HemisphereLight('#7ec8ff', '#162336', 0.65);
+    // Balanced Moody Three-Point + Soft Rim Lighting:
+    // 1. Cool deep-navy atmospheric hemisphere fill
+    const hemiLight = new THREE.HemisphereLight('#385e96', '#060c17', 0.28);
     scene.add(hemiLight);
 
-    const sunLight = new THREE.DirectionalLight('#fff5d6', 2.4);
-    sunLight.position.set(-13.5, 13.0, -24.0);
+    // 2. Warm low-angle golden/amber directional key light with crisp 2048px soft shadows
+    const sunLight = new THREE.DirectionalLight('#ffbe73', 1.38);
+    sunLight.position.set(-16.5, 7.6, -25.0);
     sunLight.castShadow = !isSoftwareGl;
     if (sunLight.castShadow) {
-      sunLight.shadow.mapSize.set(1024, 1024);
-      sunLight.shadow.camera.near = 1;
-      sunLight.shadow.camera.far = 75;
-      sunLight.shadow.camera.left = -16;
-      sunLight.shadow.camera.right = 16;
-      sunLight.shadow.camera.top = 14;
-      sunLight.shadow.camera.bottom = -12;
-      sunLight.shadow.bias = -0.0005;
+      sunLight.shadow.mapSize.set(2048, 2048);
+      sunLight.shadow.camera.near = 2;
+      sunLight.shadow.camera.far = 68;
+      sunLight.shadow.camera.left = -14;
+      sunLight.shadow.camera.right = 14;
+      sunLight.shadow.camera.top = 12;
+      sunLight.shadow.camera.bottom = -10;
+      sunLight.shadow.bias = -0.0004;
+      sunLight.shadow.normalBias = 0.025;
+      sunLight.shadow.radius = 2.6;
     }
     scene.add(sunLight);
 
-    const deckFillLight = new THREE.PointLight('#38bdf8', 1.1, 22, 1.5);
-    deckFillLight.position.set(1.5, 4.5, 6.5);
+    // 3. Subtle cool-cyan specular rim light for silhouette edge separation
+    const rimLight = new THREE.DirectionalLight('#5aa8e6', 0.72);
+    rimLight.position.set(14.5, 6.2, -16.0);
+    rimLight.target.position.set(0, 1.0, 2.5);
+    scene.add(rimLight);
+    scene.add(rimLight.target);
+
+    // Subtle dual-tone observatory deck instrument fills
+    const deckFillLight = new THREE.PointLight('#38bdf8', 0.42, 16, 1.8);
+    deckFillLight.position.set(-2.2, 3.8, 5.8);
     scene.add(deckFillLight);
 
-    // Procedural Textures + Environment + Composite Landmarks + 3rd-Person Explorer
-    const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-    const textures = createObservatoryTextures(maxAniso);
+    const deckWarmFill = new THREE.PointLight('#fb923c', 0.32, 13, 1.9);
+    deckWarmFill.position.set(4.2, 2.2, 4.4);
+    scene.add(deckWarmFill);
+
+    // Environment + Composite Landmarks + 3rd-Person Explorer
     const envSystem = createEnvironmentSystem(scene, textures);
     const landmarks = createLandmarksSystem(textures);
     landmarksRef.current = landmarks;
     scene.add(landmarks.root);
     scene.add(explorer.group);
+
+    // Cinematic Post-Processing Pipeline (GPU only; software WebGL renders direct for smooth pacing)
+    const postPipeline: PostProcessingPipeline | null = isSoftwareGl
+      ? null
+      : createPostProcessingPipeline(renderer, scene, camera, width, height, pixelRatio);
 
     // 3D Holographic Ground Waypoint & Directional Guide Chevrons
     const waypointGroup = new THREE.Group();
@@ -550,6 +588,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      postPipeline?.setSize(w, h, renderer.getPixelRatio());
     };
     window.addEventListener('resize', onResize);
 
@@ -583,6 +622,7 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
     let disposed = false;
     let rafId = 0;
     let lastNow = performance.now();
+    let breathGain = 0;
 
     const animate = () => {
       if (disposed) return;
@@ -614,10 +654,11 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
       smooth.vaporIntensity += (wantVapor - smooth.vaporIntensity) * k;
       smooth.tempK += (target.T_surface - smooth.tempK) * k;
 
-      // Update directional sun color & subtle intensity response
-      sunLight.color.copy(smooth.sun).lerp(_targetColZenith.set('#ffffff'), 0.35);
-      sunLight.intensity = 2.1 + smooth.angularSizeRatio * 0.25;
-      hemiLight.color.copy(smooth.zenith).lerp(_targetColHorizon.set('#ffffff'), 0.4);
+      // Update directional sun color (calm golden/amber key) + atmospheric fill & rim
+      sunLight.color.copy(smooth.sun).lerp(_targetColZenith.set('#ffbe73'), 0.45);
+      sunLight.intensity = 1.28 + Math.min(0.42, smooth.angularSizeRatio * 0.14);
+      hemiLight.color.copy(smooth.zenith).lerp(_targetColHorizon.set('#2e5082'), 0.4);
+      rimLight.color.copy(smooth.zenith).lerp(_targetColHorizon.set('#5eaee8'), 0.65);
 
       // 2-Second Cinematic Intro Camera Sweep on Initial 3P Launch
       if (introSweepActive) {
@@ -720,16 +761,16 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
         );
       }
 
-      // Update camera preset glide if active
+      // Update camera preset / instrument focus glide with smooth exponential damping
       if (camTransitionRef.current.active && !introSweepActive) {
-        const ck = 1 - Math.exp(-dt * 6.5);
+        const ck = prefersReduced ? 1 : 1 - Math.exp(-dt * 5.2);
         _camGoalPos.copy(camTransitionRef.current.pos);
         _camGoalTarget.copy(camTransitionRef.current.target);
         camera.position.lerp(_camGoalPos, ck);
         controls.target.lerp(_camGoalTarget, ck);
         if (
-          camera.position.distanceTo(_camGoalPos) < 0.05 &&
-          controls.target.distanceTo(_camGoalTarget) < 0.05
+          camera.position.distanceTo(_camGoalPos) < 0.04 &&
+          controls.target.distanceTo(_camGoalTarget) < 0.04
         ) {
           camTransitionRef.current.active = false;
         }
@@ -842,7 +883,28 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
         }
       }
 
-      renderer.render(scene, camera);
+      // Apply subtle damped camera breathing / handheld sway symmetrically for this frame
+      const wantBreath = !prefersReduced && !isUserDragging && !introSweepActive ? 1 : 0;
+      breathGain += (wantBreath - breathGain) * (1 - Math.exp(-dt * 3.5));
+      _breathOffset.set(0, 0, 0);
+      if (breathGain > 0.002) {
+        camera.updateMatrixWorld();
+        _camRight.setFromMatrixColumn(camera.matrixWorld, 0);
+        _camUp.setFromMatrixColumn(camera.matrixWorld, 1);
+        const swayX =
+          (Math.sin(tSec * 0.57) * 0.024 + Math.sin(tSec * 1.13) * 0.008) * breathGain;
+        const swayY =
+          (Math.sin(tSec * 0.83 + 1.1) * 0.02 + Math.cos(tSec * 0.41) * 0.007) * breathGain;
+        _breathOffset.addScaledVector(_camRight, swayX).addScaledVector(_camUp, swayY);
+        camera.position.add(_breathOffset);
+        camera.updateMatrixWorld();
+      }
+
+      if (postPipeline) {
+        postPipeline.render(tSec, prefersReduced);
+      } else {
+        renderer.render(scene, camera);
+      }
 
       // Project 3D Landmark anchors to 2D floating badges clamped inside the open center area
       const viewW = renderer.domElement.clientWidth || window.innerWidth;
@@ -879,6 +941,12 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
         el.style.pointerEvents = 'auto';
       }
 
+      // Remove temporary breathing offset cleanly so OrbitControls & pointer picking stay drift-free
+      if (_breathOffset.lengthSq() > 0) {
+        camera.position.sub(_breathOffset);
+        camera.updateMatrixWorld();
+      }
+
       if (isSoftwareGl) {
         afterDraw(animate);
       } else {
@@ -900,10 +968,12 @@ export const Observatory3D: React.FC<Observatory3DProps> = ({
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', onBlur);
       controls.removeEventListener('start', cancelPresetOnDrag);
+      controls.removeEventListener('end', onControlEnd);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       renderer.domElement.removeEventListener('pointerup', onPointerUp);
       renderer.domElement.removeEventListener('pointermove', onPointerMove);
       controls.dispose();
+      postPipeline?.dispose();
       wpRingGeo.dispose();
       wpRingMat.dispose();
       wpInnerGeo.dispose();

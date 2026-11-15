@@ -25,8 +25,13 @@ export class AudioManager {
   private currentMood: AmbientMood = 'temperate';
   private introMusicActive = false;
   private storyChapter: 1 | 2 | 3 | null = null;
+  private voiceDucking = false;
+  private chordTimer: number | null = null;
+  private chordStep = 0;
   private muted = false;
   private disposed = false;
+  private padChordUpdater: ((step: number) => void) | null = null;
+  private padFilterNode: BiquadFilterNode | null = null;
 
   private isThemeActive(): boolean {
     return this.introMusicActive || this.storyChapter !== null;
@@ -40,7 +45,7 @@ export class AudioManager {
     this.muted = muted;
     if (!this.ctx || !this.masterGain) return;
     const now = this.ctx.currentTime;
-    this.masterGain.gain.setTargetAtTime(muted ? 0 : 0.18, now, 0.12);
+    this.masterGain.gain.setTargetAtTime(muted ? 0 : 0.2, now, 0.14);
     if (!muted && this.ctx.state === 'suspended') {
       void this.ctx.resume();
     }
@@ -52,6 +57,11 @@ export class AudioManager {
       this.unlock();
     }
     return this.muted;
+  }
+
+  public setVoiceDucking(duck: boolean): void {
+    this.voiceDucking = duck;
+    this.applyMusicLevel();
   }
 
   public unlock(): void {
@@ -69,17 +79,17 @@ export class AudioManager {
 
     if (this.ctx.state === 'suspended') {
       void this.ctx.resume().then(() => {
-        if (!this.disposed && this.isThemeActive() && !this.muted && this.ctx && this.introBus) {
-          this.triggerIntroChime(this.ctx, this.introBus.gain);
+        if (!this.disposed && !this.muted && this.ctx && this.introBus) {
+          this.triggerAmbientNote(this.ctx, this.introBus.gain);
         }
       });
-    } else if (this.isThemeActive() && !this.muted && this.introBus && this.introArpStep === 0) {
-      this.triggerIntroChime(this.ctx, this.introBus.gain);
+    } else if (!this.muted && this.introBus && this.introArpStep === 0) {
+      this.triggerAmbientNote(this.ctx, this.introBus.gain);
     }
 
-    // Apply current mood, intro/story theme & mute state immediately after graph is ready
+    // Apply current mood, continuous calming music & mute state immediately after graph is ready
     this.applyMood(this.currentMood);
-    this.applyIntroMusic(this.isThemeActive());
+    this.applyMusicLevel();
     this.setMuted(this.muted);
   }
 
@@ -87,46 +97,46 @@ export class AudioManager {
     this.currentMood = mood;
     if (!this.ctx || !this.buses) return;
     this.applyMood(mood);
+    if (this.padFilterNode) {
+      const targetFreq = mood === 'frozen' ? 320 : mood === 'hot' ? 460 : 410;
+      this.padFilterNode.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.9);
+    }
   }
 
   public setIntroMusicActive(active: boolean): void {
-    const wasTheme = this.isThemeActive();
     this.introMusicActive = active;
-    const nowTheme = this.isThemeActive();
     if (!this.ctx || !this.buses || !this.introBus) return;
     this.applyMood(this.currentMood);
-    this.applyIntroMusic(nowTheme);
-    if (nowTheme && !wasTheme && !this.muted && this.ctx.state === 'running') {
-      this.triggerIntroChime(this.ctx, this.introBus.gain);
-    }
+    this.applyMusicLevel();
   }
 
   public setStoryChapter(chapter: 1 | 2 | 3 | null): void {
     const changed = this.storyChapter !== chapter;
     this.storyChapter = chapter;
-    const nowTheme = this.isThemeActive();
     if (!this.ctx || !this.buses || !this.introBus) return;
     this.applyMood(this.currentMood);
-    this.applyIntroMusic(nowTheme);
+    this.applyMusicLevel();
     if (chapter !== null && changed && !this.muted && this.ctx.state === 'running') {
-      this.triggerIntroChime(this.ctx, this.introBus.gain);
+      this.triggerAmbientNote(this.ctx, this.introBus.gain);
     }
   }
 
   private applyMood(mood: AmbientMood): void {
     if (!this.ctx || !this.buses) return;
     const now = this.ctx.currentTime;
-    const scale = this.isThemeActive() ? 0.32 : 1;
+    const scale = this.isThemeActive() ? 0.24 : 0.48;
     (['frozen', 'temperate', 'hot'] as AmbientMood[]).forEach((key) => {
       const bus = this.buses![key];
       bus.gain.gain.setTargetAtTime(key === mood ? scale : 0, now, 0.55);
     });
   }
 
-  private applyIntroMusic(active: boolean): void {
+  private applyMusicLevel(): void {
     if (!this.ctx || !this.introBus) return;
     const now = this.ctx.currentTime;
-    this.introBus.gain.gain.setTargetAtTime(active ? 1 : 0, now, active ? 0.75 : 0.7);
+    const baseLevel = this.isThemeActive() ? 1.0 : 0.82;
+    const targetLevel = this.voiceDucking ? baseLevel * 0.42 : baseLevel;
+    this.introBus.gain.gain.setTargetAtTime(targetLevel, now, this.voiceDucking ? 0.28 : 0.75);
   }
 
   private createNoiseBuffer(ctx: AudioContext): AudioBuffer {
@@ -167,7 +177,7 @@ export class AudioManager {
 
   private buildGraph(ctx: AudioContext): void {
     const master = ctx.createGain();
-    master.gain.value = this.muted ? 0 : 0.18;
+    master.gain.value = this.muted ? 0 : 0.2;
     master.connect(ctx.destination);
     this.masterGain = master;
 
@@ -176,7 +186,7 @@ export class AudioManager {
     // 1. FROZEN: Low arctic wind hum
     const frozenBus = (() => {
       const busGain = ctx.createGain();
-      busGain.gain.value = this.currentMood === 'frozen' ? 1 : 0;
+      busGain.gain.value = this.currentMood === 'frozen' ? 0.48 : 0;
       busGain.connect(master);
 
       const noise = ctx.createBufferSource();
@@ -197,13 +207,13 @@ export class AudioManager {
       lfoGain.connect(filter.frequency);
 
       const noiseGain = ctx.createGain();
-      noiseGain.gain.value = 0.72;
+      noiseGain.gain.value = 0.62;
 
       const drone = ctx.createOscillator();
       drone.type = 'sine';
       drone.frequency.value = 110;
       const droneGain = ctx.createGain();
-      droneGain.gain.value = 0.06;
+      droneGain.gain.value = 0.04;
 
       noise.connect(filter);
       filter.connect(noiseGain);
@@ -229,7 +239,7 @@ export class AudioManager {
     // 2. TEMPERATE: Soft coastal water lap
     const temperateBus = (() => {
       const busGain = ctx.createGain();
-      busGain.gain.value = this.currentMood === 'temperate' ? 1 : 0;
+      busGain.gain.value = this.currentMood === 'temperate' ? 0.48 : 0;
       busGain.connect(master);
 
       const noise = ctx.createBufferSource();
@@ -238,23 +248,23 @@ export class AudioManager {
 
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
-      lp.frequency.value = 460;
+      lp.frequency.value = 430;
       lp.Q.value = 0.7;
 
       const surfGain = ctx.createGain();
-      surfGain.gain.value = 0.36;
+      surfGain.gain.value = 0.28;
 
       // Gentle rhythmic wave swell
       const lfo = ctx.createOscillator();
       lfo.type = 'sine';
       lfo.frequency.value = 0.16;
       const lfoFilterGain = ctx.createGain();
-      lfoFilterGain.gain.value = 210;
+      lfoFilterGain.gain.value = 190;
       lfo.connect(lfoFilterGain);
       lfoFilterGain.connect(lp.frequency);
 
       const lfoAmpGain = ctx.createGain();
-      lfoAmpGain.gain.value = 0.14;
+      lfoAmpGain.gain.value = 0.11;
       lfo.connect(lfoAmpGain);
       lfoAmpGain.connect(surfGain.gain);
 
@@ -262,7 +272,7 @@ export class AudioManager {
       oceanWarmth.type = 'sine';
       oceanWarmth.frequency.value = 73.4;
       const warmthGain = ctx.createGain();
-      warmthGain.gain.value = 0.03;
+      warmthGain.gain.value = 0.02;
 
       noise.connect(lp);
       lp.connect(surfGain);
@@ -288,7 +298,7 @@ export class AudioManager {
     // 3. HOT: Crackling thermal shimmer
     const hotBus = (() => {
       const busGain = ctx.createGain();
-      busGain.gain.value = this.currentMood === 'hot' ? 1 : 0;
+      busGain.gain.value = this.currentMood === 'hot' ? 0.48 : 0;
       busGain.connect(master);
 
       const noise = ctx.createBufferSource();
@@ -301,13 +311,13 @@ export class AudioManager {
       hp.Q.value = 1.5;
 
       const shimmerGain = ctx.createGain();
-      shimmerGain.gain.value = 0.24;
+      shimmerGain.gain.value = 0.18;
 
       const lfo = ctx.createOscillator();
       lfo.type = 'sine';
       lfo.frequency.value = 0.35;
       const lfoFreq = ctx.createGain();
-      lfoFreq.gain.value = 480;
+      lfoFreq.gain.value = 420;
       lfo.connect(lfoFreq);
       lfoFreq.connect(hp.frequency);
 
@@ -319,7 +329,7 @@ export class AudioManager {
       oscB.type = 'sine';
       oscB.frequency.value = 495;
       const oscGain = ctx.createGain();
-      oscGain.gain.value = 0.022;
+      oscGain.gain.value = 0.015;
 
       noise.connect(hp);
       hp.connect(shimmerGain);
@@ -351,38 +361,44 @@ export class AudioManager {
       hot: hotBus,
     };
 
-    // 4. OPENING SPACE AMBIENT THEME: gentle lowpass warm pad + delicate sparse chimes
-    const introBus = (() => {
+    // 4. CONTINUOUS CALMING SPACE SOUNDTRACK (plays gently through Intro + Gameplay)
+    const CHORDS: number[][] = [
+      [130.81, 196.0, 246.94, 329.63], // Cmaj9
+      [110.0, 164.81, 246.94, 293.66], // Am9
+      [174.61, 220.0, 261.63, 329.63], // Fmaj9
+      [146.83, 196.0, 246.94, 329.63], // G6sus4/D
+    ];
+
+    const musicBus = (() => {
       const busGain = ctx.createGain();
-      busGain.gain.value = this.introMusicActive ? 1 : 0;
+      busGain.gain.value = this.isThemeActive() ? 1.0 : 0.82;
       busGain.connect(master);
 
       const padFilter = ctx.createBiquadFilter();
       padFilter.type = 'lowpass';
-      padFilter.frequency.value = 540;
-      padFilter.Q.value = 0.65;
+      padFilter.frequency.value = 410;
+      padFilter.Q.value = 0.6;
+      this.padFilterNode = padFilter;
 
       const padSwirlLfo = ctx.createOscillator();
       padSwirlLfo.type = 'sine';
-      padSwirlLfo.frequency.value = 0.08;
+      padSwirlLfo.frequency.value = 0.055;
       const padSwirlGain = ctx.createGain();
-      padSwirlGain.gain.value = 180;
+      padSwirlGain.gain.value = 95;
       padSwirlLfo.connect(padSwirlGain);
       padSwirlGain.connect(padFilter.frequency);
 
       const padMaster = ctx.createGain();
-      padMaster.gain.value = 0.24;
+      padMaster.gain.value = 0.28;
       padFilter.connect(padMaster);
       padMaster.connect(busGain);
 
-      // Calm orbital Cmaj9 voicing (C3, G3, B3, E4)
-      const padFreqs = [130.81, 196.0, 246.94, 329.63];
       const padOscs: OscillatorNode[] = [];
-      padFreqs.forEach((f, idx) => {
+      CHORDS[0].forEach((f, idx) => {
         const osc = ctx.createOscillator();
         osc.type = idx === 0 ? 'triangle' : 'sine';
         osc.frequency.value = f;
-        osc.detune.value = (idx - 1.5) * 3.5;
+        osc.detune.value = (idx - 1.5) * 4.0;
 
         const g = ctx.createGain();
         g.gain.value = idx === 0 ? 0.34 : 0.22;
@@ -392,6 +408,25 @@ export class AudioManager {
         padOscs.push(osc);
       });
 
+      // Soft warm sub-bass anchor one octave below root
+      const subOsc = ctx.createOscillator();
+      subOsc.type = 'sine';
+      subOsc.frequency.value = CHORDS[0][0] * 0.5;
+      const subGain = ctx.createGain();
+      subGain.gain.value = 0.18;
+      subOsc.connect(subGain);
+      subGain.connect(padFilter);
+      subOsc.start();
+
+      this.padChordUpdater = (step: number) => {
+        const chord = CHORDS[step % CHORDS.length];
+        const t = ctx.currentTime;
+        padOscs.forEach((o, i) => {
+          o.frequency.setTargetAtTime(chord[i], t, 0.95);
+        });
+        subOsc.frequency.setTargetAtTime(chord[0] * 0.5, t, 1.1);
+      };
+
       padSwirlLfo.start();
 
       return {
@@ -399,25 +434,37 @@ export class AudioManager {
         stop: () => {
           padSwirlLfo.stop();
           padOscs.forEach((o) => o.stop());
+          subOsc.stop();
         },
       };
     })();
-    this.introBus = introBus;
+    this.introBus = musicBus;
 
-    // Gentle non-intrusive sparse orbital chime melody while intro or chapter story briefing is active
+    // Evolve calming chord progression smoothly every ~8 seconds
+    this.chordTimer = window.setInterval(() => {
+      if (this.disposed || this.muted || !this.ctx || this.ctx.state !== 'running') return;
+      this.chordStep = (this.chordStep + 1) % CHORDS.length;
+      this.padChordUpdater?.(this.chordStep);
+    }, 8000);
+
+    // Gentle felt-piano / chime notes floating softly over the ambient pad throughout gameplay
     this.introArpTimer = window.setInterval(() => {
       if (
         this.disposed ||
         this.muted ||
-        !this.isThemeActive() ||
         !this.ctx ||
         this.ctx.state !== 'running' ||
         !this.introBus
       ) {
         return;
       }
-      this.triggerIntroChime(this.ctx, this.introBus.gain);
-    }, 1850);
+      // Leave organic silent rests ~24% of the time during gameplay so music breathes
+      if (!this.isThemeActive() && this.introArpStep % 4 === 3 && Math.random() < 0.45) {
+        this.introArpStep += 1;
+        return;
+      }
+      this.triggerAmbientNote(this.ctx, this.introBus.gain);
+    }, 2350);
 
     // Procedural thermal micro-crackles when in 'hot' mood
     this.crackleTimer = window.setInterval(() => {
@@ -436,14 +483,20 @@ export class AudioManager {
     }, 160);
   }
 
-  private triggerIntroChime(ctx: AudioContext, dest: AudioNode): void {
+  private triggerAmbientNote(ctx: AudioContext, dest: AudioNode): void {
     const scales: Record<'default' | 1 | 2 | 3, number[]> = {
       default: [523.25, 659.25, 783.99, 587.33, 987.77, 783.99, 659.25, 493.88],
       1: [523.25, 587.33, 659.25, 783.99, 987.77, 783.99, 659.25, 587.33],
-      2: [587.33, 659.25, 880.0, 739.99, 1174.66, 880.0, 659.25, 554.37],
+      2: [587.33, 659.25, 880.0, 739.99, 987.77, 880.0, 659.25, 554.37],
       3: [440.0, 523.25, 659.25, 493.88, 783.99, 659.25, 523.25, 392.0],
     };
-    const melody = this.storyChapter ? scales[this.storyChapter] : scales.default;
+    const frozenScale = [440.0, 493.88, 523.25, 659.25, 783.99, 659.25, 523.25, 392.0];
+    const melody =
+      this.currentMood === 'frozen' && !this.storyChapter
+        ? frozenScale
+        : this.storyChapter
+          ? scales[this.storyChapter]
+          : scales.default;
     const freq = melody[this.introArpStep % melody.length];
     this.introArpStep += 1;
 
@@ -457,16 +510,16 @@ export class AudioManager {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, now);
 
-    shimmer.type = 'sine';
+    shimmer.type = 'triangle';
     shimmer.frequency.setValueAtTime(freq * 2, now);
-    shimmerGain.gain.setValueAtTime(0.08, now);
+    shimmerGain.gain.setValueAtTime(0.045, now);
 
     filter.type = 'lowpass';
-    filter.frequency.value = 1750;
+    filter.frequency.value = 1150;
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(0.14, now + 0.16);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.35);
+    gain.gain.linearRampToValueAtTime(0.11, now + 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.1);
 
     osc.connect(filter);
     shimmer.connect(shimmerGain);
@@ -476,8 +529,30 @@ export class AudioManager {
 
     osc.start(now);
     shimmer.start(now);
-    osc.stop(now + 2.45);
-    shimmer.stop(now + 2.45);
+    osc.stop(now + 3.2);
+    shimmer.stop(now + 3.2);
+  }
+
+  /** Ultra-soft 2-note orbital radio chime played right before a calm TERRA voice remark. */
+  public playCommsChirp(): void {
+    if (this.disposed || this.muted || !this.ctx || this.ctx.state !== 'running') return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const freqs = [783.99, 1046.5];
+    freqs.forEach((f, idx) => {
+      const start = now + idx * 0.09;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.045, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.24);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.26);
+    });
   }
 
   private triggerCrackle(ctx: AudioContext, dest: AudioNode): void {
@@ -769,6 +844,12 @@ export class AudioManager {
       window.clearInterval(this.introArpTimer);
       this.introArpTimer = null;
     }
+    if (this.chordTimer !== null) {
+      window.clearInterval(this.chordTimer);
+      this.chordTimer = null;
+    }
+    this.padChordUpdater = null;
+    this.padFilterNode = null;
     if (this.buses) {
       this.buses.frozen.stop();
       this.buses.temperate.stop();

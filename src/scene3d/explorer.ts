@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { ObservatoryTextures } from './materials';
 
 export interface ExplorerMoveInput {
   moveX: number; // -1..1 in camera horizontal right
@@ -92,7 +93,7 @@ function resolveWalkableGround(nx: number, nz: number): { x: number; z: number; 
   return { x, z, y };
 }
 
-export function createExplorerSystem(): ExplorerSystem {
+export function createExplorerSystem(textures: ObservatoryTextures): ExplorerSystem {
   const group = new THREE.Group();
   const geometries: THREE.BufferGeometry[] = [];
   const materials: THREE.Material[] = [];
@@ -108,46 +109,58 @@ export function createExplorerSystem(): ExplorerSystem {
 
   const matSuitWhite = trackMat(
     new THREE.MeshStandardMaterial({
-      color: '#e2e8f0',
-      roughness: 0.42,
+      normalMap: textures.metalNormal,
+      normalScale: new THREE.Vector2(0.18, 0.18),
+      roughnessMap: textures.metalRoughness,
+      color: '#cbd5e1',
+      roughness: 0.56,
       metalness: 0.14,
     })
   );
   const matSuitNavy = trackMat(
     new THREE.MeshStandardMaterial({
+      normalMap: textures.metalNormal,
+      normalScale: new THREE.Vector2(0.22, 0.22),
+      roughnessMap: textures.metalRoughness,
       color: '#1e3a5f',
-      roughness: 0.62,
-      metalness: 0.12,
+      roughness: 0.68,
+      metalness: 0.14,
     })
   );
   const matBoot = trackMat(
     new THREE.MeshStandardMaterial({
+      normalMap: textures.rockNormal,
+      normalScale: new THREE.Vector2(0.2, 0.2),
       color: '#0f172a',
       roughness: 0.78,
-      metalness: 0.2,
+      metalness: 0.22,
     })
   );
   const matAccentOrange = trackMat(
     new THREE.MeshStandardMaterial({
+      roughnessMap: textures.metalRoughness,
       color: '#f97316',
-      roughness: 0.38,
-      metalness: 0.25,
+      roughness: 0.44,
+      metalness: 0.26,
     })
   );
   const matVisorGold = trackMat(
-    new THREE.MeshStandardMaterial({
+    new THREE.MeshPhysicalMaterial({
       color: '#fbbf24',
       emissive: '#b45309',
-      emissiveIntensity: 0.22,
-      roughness: 0.14,
-      metalness: 0.88,
+      emissiveIntensity: 0.2,
+      roughness: 0.12,
+      metalness: 0.9,
+      clearcoat: 0.85,
+      clearcoatRoughness: 0.08,
+      envMapIntensity: 1.0,
     })
   );
   const matGlowCyan = trackMat(
     new THREE.MeshStandardMaterial({
       color: '#7dd3fc',
       emissive: '#38bdf8',
-      emissiveIntensity: 0.9,
+      emissiveIntensity: 1.08,
       roughness: 0.2,
     })
   );
