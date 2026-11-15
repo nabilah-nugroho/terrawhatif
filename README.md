@@ -1,22 +1,47 @@
+<div align="center">
+
 # TerraWhatIf: Earth System Trend Detective
 
-> **Interactive 3D Coastal Climate Observatory & Planetary Habitability Simulator**  
-> Built for **NASA Space Apps Challenge 2026** (*"Be An Earth System Trend Detective!"*)
+**Interactive 3D Coastal Climate Observatory & Planetary Habitability Simulator**  
+Built for **NASA Space Apps Challenge 2026** — *"Be An Earth System Trend Detective!"*
 
-**TerraWhatIf** is an interactive 3D web science experience that combines **third-person 3D observatory exploration**, **calibrated first-order radiative-balance physics**, and **real NASA Giovanni satellite trend analysis (2003–2025)**.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-terrawhatif.vercel.app-0ea5e9?style=for-the-badge&logo=vercel&logoColor=white)](https://terrawhatif.vercel.app/)
+[![NASA Space Apps](https://img.shields.io/badge/NASA_Space_Apps-2026-fbbf24?style=for-the-badge&logo=nasa&logoColor=06090f)](https://www.spaceappschallenge.org/)
+[![React 19](https://img.shields.io/badge/React-19-38bdf8?style=for-the-badge&logo=react&logoColor=06090f)](https://react.dev/)
+[![Three.js](https://img.shields.io/badge/Three.js-WebGL-e2e8f0?style=for-the-badge&logo=threedotjs&logoColor=06090f)](https://threejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-Instead of reading static charts, players step onto a coastal climate observatory deck as an Earth System Trend Detective alongside planetary navigator **TERRA**, scan scientific instruments with a holographic wrist-scanner, test hypotheses through chapter prediction quizzes, and watch Earth's atmosphere, oceans, polar ice, sky optics, and orbital globe respond live in 3D.
+<br />
+
+<img src="./src/assets/images/observatory_hero_banner_1794749691435.jpg" alt="TerraWhatIf 3D Coastal Climate Observatory and Astronaut Wrist-Scanner" width="100%" />
+
+</div>
+
+<br />
+
+**TerraWhatIf** is an interactive 3D web science experience that combines **third-person 3D observatory exploration**, **calibrated first-order radiative-balance physics**, and **NASA Giovanni satellite trend analysis (2003–2025)**.
+
+Instead of reading static climate charts, players step onto a coastal climate observatory deck as an Earth System Trend Detective alongside planetary navigator **TERRA**, follow an interactive guided feature tour, scan scientific instruments with a holographic wrist-scanner, test hypotheses through chapter prediction quizzes, and watch Earth's atmosphere, oceans, polar ice, sky optics, and orbital globe respond live in 3D.
+
+---
+
+## Planetary Climate States at a Glance
+
+<div align="center">
+  <img src="./src/assets/images/climate_feedback_states_1794749690453.jpg" alt="Frozen Snowball Earth, Balanced Temperate Earth, and Red-Amber TRAPPIST-1 Exoplanet States" width="100%" />
+  <p><sub><strong>Left:</strong> Ice-Albedo Snowball Freeze (<code>-18°C</code> airless / low CO₂) &nbsp;·&nbsp; <strong>Center:</strong> Earth Baseline (<code>+15°C</code>, liquid oceans) &nbsp;·&nbsp; <strong>Right:</strong> Exoplanet <strong>TRAPPIST-1 e</strong> (sunset-amber Rayleigh sky &amp; Habitable Zone ring)</sub></p>
+</div>
 
 ---
 
 ## Key Features
 
-### 1. Immediate 3D Observatory & Third-Person Exploration (`Walking 3P`)
-- **Cinematic Opening Sweep**: Launches directly into the 3D WebGL scene with a 2-second orbital-horizon camera sweep, retracting cinema letterbox bars, and an incoming typewriter mission transmission from **TERRA**.
-- **3D Astronaut & Holographic Wrist-Scanner**: Walk across the observatory deck using `W A S D` / Arrow keys (or the touch D-Pad on mobile). Press `[E]` or tap any nearby instrument to aim the astronaut's holographic cyan/amber scan beam and target ring.
-- **3D Floor Waypoint Path & Celebrations**: A glowing animated floor beacon and chevron trail guide the player from the astronaut's feet to the active mission instrument, and the astronaut celebrates with a hop and wave whenever a chapter mission is completed.
-- **Real-Time Dynamic 3D Environment**:
-  - Physically computed **Rayleigh sky colors** shifting from Earth's *Azure Blue* to **TRAPPIST-1**'s *Sunset Amber*.
+### 1. Immediate 3D Observatory & Guided Onboarding
+- **Cinematic Opening & Typewriter Briefing**: Launches directly into the 3D WebGL scene with a 2-second orbital-horizon camera sweep, retracting letterbox bars, calm procedural orbital music, and an incoming typewriter transmission from **TERRA**.
+- **7-Step Point-Out Feature Tour**: Automatically spotlights each HUD control (`Mission Checklist`, `Live Climate Gauge`, `3P / Overview Camera`, `3D Instruments`, `What-If Sliders`, `TERRA Copilot`, and `NASA 3D Replay`) with `Next` / `Back` / `Skip` guidance—and can be replayed anytime via the **Tour** button or **`?` Controls Guide**.
+- **3D Astronaut & Holographic Wrist-Scanner**: Walk across the observatory deck using `W A S D` / Arrow keys (or the mobile touch D-Pad). Press **`E`** or tap any glowing instrument to aim the astronaut's holographic scan beam.
+- **Real-Time 3D Environment**:
+  - Physically computed **15-wavelength Rayleigh sky colors** shifting from Earth's *Azure Blue* to **TRAPPIST-1**'s *Sunset Amber*.
   - Dynamic **3D weather particles**: falling snow flurries below freezing (`< 275 K`) and rising thermal embers during extreme heat (`> 315 K`).
   - Live **3D Spherical Earth** in the upper sky reflecting ice cover and cloud haze, plus a floating **3D Mini Habitable Zone Hologram** above the Star Telescope.
 
@@ -34,32 +59,47 @@ Each chapter opens with a **Chapter Story Briefing** featuring animated typewrit
   1. **Look!** — Direct visual observations in the 3D scene.
   2. **Why?** — Everyday analogies explaining the underlying mechanism.
   3. **Math & NASA Data** — Structured physics formula, live simulation telemetry, and matching NASA observations.
-- **Prediction Quizzes in Every Chapter (`CH1`–`CH3`)**: Encourages scientific prediction before experimenting, with immediate right/wrong intuitive explanations.
+- **Prediction Quizzes in Every Chapter (`CH1`–`CH3`)**: Encourages scientific prediction before experimenting, with immediate intuitive explanations.
 - **1-Click *What-If Presets* & Live `vs. Earth` Delta Strip**: Jump straight into *Earth Today*, *Snowball Earth*, *2× CO₂ Future*, *Runaway Heat*, or *TRAPPIST-1 e*, compare live temperature and ice deltas against Earth baseline, or click **Reset** in one tap.
-- **Intuitive Off-Track Guidance**: Moving controls counter to the active experiment (such as stripping Earth's atmosphere when testing warming) triggers helpful non-punitive feedback explaining *why* that physical change happens.
 
 ### 4. NASA Giovanni Data Explorer & Live 3D Replay (2003–2025)
+
+<div align="center">
+  <img src="./src/assets/images/nasa_trend_diagram_1794749690339.jpg" alt="NASA Giovanni Climate Trend Regression and Radiative Balance Telemetry" width="100%" />
+</div>
+
 - **OLS Regression & Student's t-Test Engine (`trends.js`)**: Computes decadal slope, $R^2$, *t*-statistic, *p*-value, and 95% confidence intervals across four **NASA Giovanni (MERRA-2 & AIRS)** regional time series:
   - *Arctic Surface Temperature* (66–90°N)
-  - *Tropical Surface Temperature* (23°S–23°N)
+  - *Tropical Surface Temperature* (20°S–20°N)
   - *Arctic Sea-Ice Albedo*
   - *Tropical Water Vapor*
-- **Animated Sparklines & Live 3D Replay**: Hovering the *Regional Trends* card animates the 2003–2025 regression sweep, and **`Play 2003→2025 in 3D`** replays 22 years of observed NASA satellite progression directly inside the 3D observatory with a live telemetry HUD.
+- **Animated Sparklines & Live 3D Replay**: Hovering the *Regional Trends* card animates the 2003–2025 regression sweep, and **`Play 2003→2025 in 3D`** replays 22 years of observed satellite progression directly inside the 3D observatory with a live telemetry HUD.
 
 ### 5. Gamification, Science Lab & Procedural Web Audio
 - **Detective Ranks & 5 Unlockable Badges**: Progress from *Rookie Observer* to *Master Trend Detective* (*Blanket Decoder*, *Flashlight Physicist*, *Exoplanet Scout*, *Prediction Ace*, *Master Trend Detective*), culminating in a **Mission Debrief** summary after Chapter 3.
 - **Science Lab Sandbox**: Full open-ended parameter controls (host star, orbital distance, `CO₂`, `CH₄`, airless toggle), optical depth breakdown ($\tau_{\text{base}}, \tau_{\text{CO}_2}, \tau_{\text{CH}_4}, \tau_{\text{H}_2\text{O}}$), and model limitations documentation.
-- **Zero-Asset Procedural Audio (`AudioManager`)**: Synthesizes calm orbital opening music, per-chapter story themes, subtle comms typewriter ticks, footsteps, success/wrong cues, and mood-driven climate soundscapes (low Arctic wind hum, soft coastal surf, and thermal crackles).
+- **Zero-Asset Procedural Audio (`AudioManager`)**: Synthesizes calm orbital opening music, per-chapter story themes, comms typing ticks, footsteps, success/wrong cues, and mood-driven climate soundscapes via the Web Audio API.
 
 ---
 
-## Physics Engine & Scientific Calibration
+## Architecture & Physics Engine
 
-All climate physics run deterministically in SI units and are verified against NASA reference values:
+```mermaid
+flowchart LR
+    U["User Input / Presets / 3D Walk"] --> P["physics.js\nRadiative Balance + Ice-Albedo + Kopparapu HZ"]
+    P --> S["sky.js\n15-Wavelength Rayleigh Sky Color"]
+    P --> O["Observatory3D (Three.js)\nEarth Globe, Ice Shelf, Particles, Scan Beam"]
+    T["trends.json + stars.json\nNASA Giovanni & Exoplanet Archive"] --> R["trends.js\nOLS Slope, R², t-stat, p-value, 95% CI"]
+    R --> O
+    P --> H["React HUD + 3-Tab Concept Cards + AudioManager"]
+    R --> H
+```
+
+All climate physics run deterministically in SI units and are calibrated against **NASA CERES EBAF**:
 
 1. **Stellar Flux & Equilibrium Temperature**:
    $$F = \sigma T_{\star}^4 \left(\frac{R_{\star}}{a}\right)^2, \qquad T_{\text{eq}} = T_{\star}\sqrt{\frac{R_{\star}}{2a}}(1 - A)^{1/4}$$
-   Calibrated to **NASA CERES EBAF**: $S_0 = 1361\text{ W/m}^2$, Bond albedo $A(288\text{ K}) = 0.30$, and airless equilibrium temperature $T_{\text{eq}} \approx 254.6\text{ K}$ (`-18.5°C`).
+   Calibrated to $S_0 = 1361\text{ W/m}^2$, Bond albedo $A(288\text{ K}) = 0.30$, and airless equilibrium temperature $T_{\text{eq}} \approx 254.6\text{ K}$ (`-18.5°C`).
 2. **Coupled Ice-Albedo Feedback**:
    $$A(T_s) = A_{\text{warm}} + (A_{\text{ice}} - A_{\text{warm}}) \cdot \frac{1}{2}\left[1 - \tanh\left(\frac{T_s - 273}{10}\right)\right]$$
    with $A_{\text{ice}} = 0.62$.
@@ -76,11 +116,11 @@ All climate physics run deterministically in SI units and are verified against N
 | Layer | Technology |
 | :--- | :--- |
 | **UI Framework** | React 19 + TypeScript + Vite |
-| **Styling** | Tailwind CSS v4 + Obsidian HUD Styling |
+| **Styling & Typography** | Tailwind CSS v4 · `Chakra Petch`, `Plus Jakarta Sans`, `JetBrains Mono` |
 | **3D Graphics** | Three.js (`WebGLRenderer`, `ACESFilmicToneMapping`, `OrbitControls`, `RoomEnvironment`) |
 | **Physics & Statistics** | Zero-dependency pure ES modules (`physics.js`, `sky.js`, `trends.js`) |
 | **Audio** | Procedural Web Audio API Synthesizer (`AudioManager.ts`) |
-| **Icons & Diagrams** | Lucide React + Custom SVG Data Visualizations |
+| **Icons & Diagrams** | Lucide React + Custom SVG Visualizations |
 
 ---
 
@@ -112,10 +152,12 @@ src/
 │   ├── presets.ts                # 1-click What-If scenario presets
 │   └── quests.ts                 # 3-step mission evaluator & intuitive step insights
 └── components/                   # Modular React UI components
+    ├── BrandMark.tsx             # Geometric orbital horizon emblem
+    ├── FeatureTourOverlay.tsx    # Interactive 7-step point-out onboarding spotlight tour
     ├── Observatory3D.tsx         # WebGL canvas, HUD-safe floating badges, floor waypoint & 3P controls
     ├── IntroBriefingCard.tsx     # Cinematic typewriter opening mission briefing
     ├── ChapterStoryModal.tsx     # Interactive chapter story viewer with typing & audio
-    ├── NavigatorMissionCard.tsx  # Collapsible 3-step mission checklist with clickable target focus
+    ├── NavigatorMissionCard.tsx  # Collapsible 3-step mission checklist with Tour/Story & focus actions
     ├── ControlDeck.tsx           # Target-marked sliders, vs. Earth delta strip, Reset & presets
     ├── ConceptCard.tsx           # 3-tab "Touch to Understand" card (Look! / Why? / Math & NASA)
     ├── GiovanniTrendsCard.tsx    # Animated NASA Giovanni sparklines, OLS t-test & 3D replay trigger
@@ -123,7 +165,7 @@ src/
     ├── DetectiveBadgesModal.tsx  # Detective rank & badge collection modal
     ├── MissionDebriefModal.tsx   # End-of-mission summary after Chapter 3 completion
     ├── ScienceLabView.tsx        # Open sandbox, full telemetry & model limitations
-    ├── ControlsHelpModal.tsx     # Keyboard shortcuts & navigation guide
+    ├── ControlsHelpModal.tsx     # Keyboard shortcuts, navigation guide & Tour replay
     ├── NotebookDrawer.tsx        # Discovery notebook (0/8 instruments)
     ├── StarSwitcherCard.tsx      # Host star switcher (Sun ↔ TRAPPIST-1)
     ├── RewardBanner.tsx          # Success/off-track explanation banner with quick Next CTA
@@ -150,12 +192,12 @@ node src/engine/physics.test.js    # Run calibrated physics test suite (10/10)
 | `E` | Scan and inspect the nearest glowing instrument |
 | `V` | Toggle between **Walking (3P)** astronaut mode and **Overview** camera |
 | `H` | Hide or show all HUD panels for an unobstructed 3D view |
-| `?` | Open the Controls & Shortcuts guide |
+| `?` | Open the Controls, Shortcuts & Feature Tour guide |
 | **Drag / Scroll** | Orbit the camera angle and zoom in/out |
 
 ---
 
-## Scientific Data Credits
+## Scientific Data Credits & Transparency
 - **NASA CERES EBAF**: Top-of-atmosphere solar flux (`340 W/m²`), global Bond albedo (`0.30`), and `288 K` baseline surface temperature calibration.
-- **NASA Giovanni (GES DISC — MERRA-2 & AIRS)**: Regional 2003–2025 observational time series for Arctic & Tropical temperatures, Arctic sea-ice albedo, and tropical water vapor.
-- **NASA Exoplanet Archive**: Stellar and orbital parameters for **TRAPPIST-1** and **TRAPPIST-1 e**.
+- **NASA Giovanni (GES DISC — MERRA-2 & AIRS)**: Regional 2003–2025 observational time series for Arctic & Tropical temperatures, Arctic sea-ice albedo, and tropical water vapor (benchmark series compiled with AI assistance modeled on authentic climatological records).
+- **NASA Exoplanet Archive**: Stellar and orbital parameters for **TRAPPIST-1** and **TRAPPIST-1 e** (compiled with AI assistance from Composite Parameters).
