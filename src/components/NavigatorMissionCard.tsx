@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { BookText, Check, ChevronDown, ChevronUp, Circle, Crosshair, Target } from 'lucide-react';
+import { BookText, Check, ChevronDown, ChevronUp, Circle, Crosshair, MapPin, Target } from 'lucide-react';
 import type { ChapterQuest, QuestStep } from '../data/quests';
 
 interface NavigatorMissionCardProps {
   quest: ChapterQuest;
   onOpenStory?: () => void;
+  onStartTour?: () => void;
   onSelectStep?: (step: QuestStep) => void;
 }
 
 export const NavigatorMissionCard: React.FC<NavigatorMissionCardProps> = ({
   quest,
   onOpenStory,
+  onStartTour,
   onSelectStep,
 }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -39,6 +41,18 @@ export const NavigatorMissionCard: React.FC<NavigatorMissionCardProps> = ({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {onStartTour && !collapsed && (
+            <button
+              type="button"
+              onClick={onStartTour}
+              title="Start Interactive Feature Tour"
+              className="text-[11px] font-medium text-amber-300 hover:text-amber-200 flex items-center gap-1 transition-colors"
+            >
+              <MapPin className="w-3 h-3" />
+              <span>Tour</span>
+            </button>
+          )}
+
           {onOpenStory && !collapsed && (
             <button
               type="button"

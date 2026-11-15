@@ -227,7 +227,11 @@ export const FeatureTourOverlay: React.FC<FeatureTourOverlayProps> = ({
     if (!open) return;
     measureAndPosition();
     const raf = window.requestAnimationFrame(measureAndPosition);
-    return () => window.cancelAnimationFrame(raf);
+    const timer = window.setTimeout(measureAndPosition, 80);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, stepIdx]);
 

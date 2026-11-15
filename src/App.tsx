@@ -81,6 +81,8 @@ export default function App() {
   const [miniPredShownOnce, setMiniPredShownOnce] = useState(false);
   const [storyStage, setStoryStage] = useState<'CH1' | 'CH2' | 'CH3' | null>(null);
   const seenStoriesRef = useRef<Set<string>>(new Set());
+  const hasAutoTourRunRef = useRef(false);
+  const openCh1StoryAfterTourRef = useRef(false);
 
   const [completedChapters, setCompletedChapters] = useState<Set<StageId>>(() => new Set());
   const [completedQuizzes, setCompletedQuizzes] = useState<Set<'CH1' | 'CH2' | 'CH3'>>(
@@ -321,13 +323,17 @@ export default function App() {
 
   const handleCloseTour = (completed: boolean) => {
     setTourOpen(false);
-    try {
-      window.localStorage.setItem('terrawhatif_tour_seen_v1', '1');
-    } catch {
-      // ignore storage errors
-    }
     if (completed) {
       audioRef.current?.playStepSuccess();
+    }
+    if (openCh1StoryAfterTourRef.current) {
+      openCh1StoryAfterTourRef.current = false;
+      if (!seenStoriesRef.current.has('CH1')) {
+        seenStoriesRef.current.add('CH1');
+        window.setTimeout(() => {
+          openChapterStory('CH1');
+        }, 160);
+      }
     }
   };
 
@@ -335,20 +341,6 @@ export default function App() {
     const closingStage = storyStage;
     setStoryStage(null);
     audioRef.current?.playStoryBeat();
-    if (closingStage === 'CH1') {
-      let tourSeen = false;
-      try {
-        tourSeen = window.localStorage.getItem('terrawhatif_tour_seen_v1') === '1';
-      } catch {
-        tourSeen = false;
-      }
-      if (!tourSeen) {
-        window.setTimeout(() => {
-          startFeatureTour();
-        }, 220);
-        return;
-      }
-    }
     if (closingStage === 'CH2' && !miniPredShownOnce) {
       setMiniPredOpen(true);
       setMiniPredShownOnce(true);
@@ -363,6 +355,16 @@ export default function App() {
     }
     setStage(nextStage);
     setActiveConceptId(null);
+    if (nextStage === 'CH1' && !hasAutoTourRunRef.current) {
+      hasAutoTourRunRef.current = true;
+      openCh1StoryAfterTourRef.current = !seenStoriesRef.current.has('CH1');
+      window.setTimeout(() => {
+        setHudHidden(false);
+        setTerraCollapsedMobile(false);
+        setTourOpen(true);
+      }, 120);
+      return;
+    }
     if (nextStage === 'CH1' || nextStage === 'CH2' || nextStage === 'CH3') {
       if (!seenStoriesRef.current.has(nextStage)) {
         seenStoriesRef.current.add(nextStage);
@@ -1079,6 +1081,7 @@ export default function App() {
       {quest && !hudHidden && (
         <NavigatorMissionCard
           quest={quest}
+          onStartTour={startFeatureTour}
           onOpenStory={
             stage === 'CH1' || stage === 'CH2' || stage === 'CH3'
               ? () => openChapterStory(stage)
