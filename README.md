@@ -3,7 +3,7 @@
 <table border="0" cellspacing="0" cellpadding="0">
   <tr>
     <td align="center" valign="middle">
-      <img src="./src/assets/images/nasa_logo.svg" alt="NASA Insignia" width="84" />
+      <img src="./src/assets/images/nasa_logo.webp" alt="NASA Insignia" width="84" />
     </td>
     <td align="left" valign="middle">
       <h1 style="margin: 0;">TerraWhatIf: Earth System Trend Detective</h1>
