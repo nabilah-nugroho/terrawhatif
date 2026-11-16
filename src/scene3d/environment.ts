@@ -372,45 +372,101 @@ export function createEnvironmentSystem(
   root.add(earthGroup);
 
   // -------------------------------------------------------------------------
-  // 5. OCEAN SURFACE (Animated Vertex Ripples + Phase Morphing + Ice Floes + Vapor)
+  // 5. OCEAN SURFACE (Multi-Wave Swells + Seafoam Crests + Shoreline Glow)
   // -------------------------------------------------------------------------
   const oceanTimeUniform = { value: 0 };
   const oceanAmpUniform = { value: 0.09 };
+  const oceanIceUniform = { value: 0 };
   const oceanMat = trackMat(
     new THREE.MeshStandardMaterial({
       color: '#114170',
       normalMap: textures.oceanNormal,
-      normalScale: new THREE.Vector2(0.45, 0.45),
-      roughness: 0.2,
-      metalness: 0.35,
+      normalScale: new THREE.Vector2(0.55, 0.55),
+      roughness: 0.18,
+      metalness: 0.36,
+      envMapIntensity: 1.25,
     })
   );
   oceanMat.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = oceanTimeUniform;
     shader.uniforms.uAmp = oceanAmpUniform;
+    shader.uniforms.uOceanIce = oceanIceUniform;
     shader.vertexShader =
       `
       uniform float uTime;
       uniform float uAmp;
+      varying float vWaveCrest;
+      varying vec2 vOceanXZ;
       ` + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
       `
       #include <begin_vertex>
-      float w1 = sin(position.x * 0.36 + uTime * 1.4) * cos(position.y * 0.28 + uTime * 1.1);
-      float w2 = sin(position.x * 0.85 - uTime * 2.1 + position.y * 0.65) * 0.45;
-      transformed.z += (w1 + w2) * uAmp;
+      float w1 = sin(position.x * 0.34 + uTime * 1.35) * cos(position.y * 0.27 + uTime * 1.05);
+      float w2 = sin(position.x * 0.82 - uTime * 2.05 + position.y * 0.62) * 0.45;
+      float w3 = cos(position.x * 1.45 + position.y * 1.15 - uTime * 2.6) * 0.18;
+      float waveSum = w1 + w2 + w3;
+      transformed.z += waveSum * uAmp;
+      vWaveCrest = waveSum;
+      vec4 wpOcean = modelMatrix * vec4(transformed, 1.0);
+      vOceanXZ = wpOcean.xz;
+      `
+    );
+    shader.fragmentShader =
+      `
+      uniform float uTime;
+      uniform float uOceanIce;
+      varying float vWaveCrest;
+      varying vec2 vOceanXZ;
+      ` + shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <color_fragment>',
+      `
+      #include <color_fragment>
+      // Frothy wave crest highlights
+      float crestFoam = smoothstep(0.68, 1.48, vWaveCrest) * (1.0 - uOceanIce * 0.65);
+
+      // Gentle shoreline foam collars around rocky capes, ice shelf, and deck pilings
+      float dLeftCape = length(vOceanXZ - vec2(-7.4, 1.1));
+      float dRightCape = length(vOceanXZ - vec2(7.7, -1.8));
+      float dIceShelf = length((vOceanXZ - vec2(-6.5, -3.4)) * vec2(0.78, 1.0));
+      float shorePulse = sin(uTime * 1.9 + vOceanXZ.x * 0.8 + vOceanXZ.y * 0.7) * 0.16;
+      float shoreLeft = smoothstep(5.35 + shorePulse, 4.15, dLeftCape) * smoothstep(3.15, 4.05, dLeftCape);
+      float shoreRight = smoothstep(4.65 + shorePulse, 3.55, dRightCape) * smoothstep(2.65, 3.45, dRightCape);
+      float shoreIce = smoothstep(3.85 + shorePulse, 2.75, dIceShelf) * smoothstep(1.9, 2.65, dIceShelf);
+      float shoreFoam = clamp(shoreLeft + shoreRight + shoreIce, 0.0, 1.0) * 0.55;
+
+      float totalFoam = clamp(crestFoam * 0.36 + shoreFoam, 0.0, 0.72);
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.84, 0.94, 1.0), totalFoam);
       `
     );
   };
-  const oceanMesh = new THREE.Mesh(trackGeo(new THREE.PlaneGeometry(240, 240, 88, 88)), oceanMat);
+  const oceanMesh = new THREE.Mesh(trackGeo(new THREE.PlaneGeometry(240, 240, 104, 104)), oceanMat);
   oceanMesh.rotation.x = -Math.PI / 2;
   oceanMesh.receiveShadow = true;
   root.add(oceanMesh);
 
-  // Floating 3D ice floes (mostlyFrozen)
-  const floeCount = 34;
-  const floeGeo = trackGeo(new THREE.CylinderGeometry(0.85, 1.0, 0.18, 6));
+  // Floating sculpted hexagonal ice floes (mostlyFrozen / frozen)
+  const floeCount = 36;
+  const floeShape = new THREE.Shape();
+  for (let s = 0; s < 6; s++) {
+    const a = (s / 6) * Math.PI * 2;
+    const rad = 0.78 + seeded(s * 11 + 3) * 0.28;
+    if (s === 0) floeShape.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+    else floeShape.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+  }
+  floeShape.closePath();
+  const floeGeo = trackGeo(
+    new THREE.ExtrudeGeometry(floeShape, {
+      depth: 0.14,
+      bevelEnabled: true,
+      bevelThickness: 0.04,
+      bevelSize: 0.06,
+      bevelSegments: 2,
+    })
+  );
+  floeGeo.rotateX(-Math.PI / 2);
+  floeGeo.computeVertexNormals();
   const floeMat = trackMat(
     new THREE.MeshPhysicalMaterial({
       map: textures.iceColor,
@@ -418,11 +474,11 @@ export function createEnvironmentSystem(
       normalScale: new THREE.Vector2(0.75, 0.75),
       roughnessMap: textures.iceRoughness,
       color: '#cde7fa',
-      roughness: 0.55,
+      roughness: 0.48,
       metalness: 0.04,
-      clearcoat: 0.28,
-      clearcoatRoughness: 0.28,
-      envMapIntensity: 0.75,
+      clearcoat: 0.35,
+      clearcoatRoughness: 0.24,
+      envMapIntensity: 0.8,
       flatShading: true,
     })
   );
@@ -468,19 +524,30 @@ export function createEnvironmentSystem(
   root.add(vaporGroup);
 
   // -------------------------------------------------------------------------
-  // 6. COASTAL BASALT HEADLANDS, ARCHIPELAGO & FOREGROUND OBSERVATORY DECK
+  // 6. SCULPTED BASALT HEADLANDS, VOLCANIC HORIZON RIDGE & BEVELED PROMENADE DECK
   // -------------------------------------------------------------------------
   const matBasalt = trackMat(
     new THREE.MeshStandardMaterial({
       map: textures.rockColor,
       normalMap: textures.rockNormal,
-      normalScale: new THREE.Vector2(0.9, 0.9),
+      normalScale: new THREE.Vector2(0.92, 0.92),
       roughnessMap: textures.rockRoughness,
       bumpMap: textures.rockBump,
-      bumpScale: 0.05,
-      color: '#252f42',
-      roughness: 0.9,
-      metalness: 0.08,
+      bumpScale: 0.055,
+      color: '#253044',
+      roughness: 0.88,
+      metalness: 0.09,
+      flatShading: true,
+    })
+  );
+  const matWetBasalt = trackMat(
+    new THREE.MeshStandardMaterial({
+      map: textures.rockColor,
+      normalMap: textures.rockNormal,
+      normalScale: new THREE.Vector2(0.8, 0.8),
+      color: '#172030',
+      roughness: 0.36,
+      metalness: 0.14,
       flatShading: true,
     })
   );
@@ -489,59 +556,195 @@ export function createEnvironmentSystem(
       normalMap: textures.rockNormal,
       normalScale: new THREE.Vector2(0.55, 0.55),
       roughnessMap: textures.rockRoughness,
-      color: '#141d2e',
+      color: '#151e30',
       roughness: 0.94,
       metalness: 0.05,
       flatShading: true,
     })
   );
 
-  // Left headland (supports starmap telescope dome at (-7.1, 1.28, 1.35))
+  // Helper: Sculpted terraced basalt plateau (flat top terrace for instruments, jagged cliff sides)
+  const buildBasaltTerraceGeo = (
+    topR: number,
+    botR: number,
+    height: number,
+    seedOffset: number
+  ): THREE.BufferGeometry => {
+    const geo = trackGeo(new THREE.CylinderGeometry(topR, botR, height, 24, 5));
+    const pos = geo.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const vx = pos.getX(i);
+      const vy = pos.getY(i);
+      const vz = pos.getZ(i);
+      const r = Math.hypot(vx, vz);
+      if (r < 0.01) continue;
+      const ang = Math.atan2(vz, vx);
+      const hFrac = (vy + height * 0.5) / height; // 0 = bottom, 1 = top
+      // Keep the top landing plateau flat while sculpting multi-tiered cliff strata below
+      const cliffWeight = hFrac > 0.88 ? 0.18 : 1.0 - hFrac * 0.35;
+      const strata =
+        Math.sin(ang * 5 + seedOffset) * 0.24 +
+        Math.cos(ang * 9 - hFrac * 4.5 + seedOffset * 1.7) * 0.16 +
+        Math.sin(ang * 13 + hFrac * 7.0) * 0.08;
+      const radialScale = 1 + strata * cliffWeight;
+      pos.setX(i, vx * radialScale);
+      pos.setZ(i, vz * radialScale);
+      if (hFrac > 0.15 && hFrac < 0.88) {
+        pos.setY(i, vy + Math.sin(ang * 7 + seedOffset) * 0.08);
+      }
+    }
+    geo.computeVertexNormals();
+    return geo;
+  };
+
+  // Helper: Sculpted angular volcanic spire / crag (multi-segment icosahedron displaced cleanly)
+  const buildRockCragGeo = (
+    rx: number,
+    ry: number,
+    rz: number,
+    seedOffset: number
+  ): THREE.BufferGeometry => {
+    const geo = trackGeo(new THREE.IcosahedronGeometry(1.0, 2));
+    const pos = geo.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      const z = pos.getZ(i);
+      const ridge =
+        1 +
+        0.24 * Math.sin(x * 3.1 + y * 2.4 + seedOffset) +
+        0.16 * Math.cos(z * 4.2 - y * 3.0 + seedOffset * 1.9);
+      const taper = y > 0 ? Math.max(0.28, 1 - y * 0.56) : 1.06;
+      pos.setXYZ(i, x * rx * ridge * taper, y * ry * (0.92 + 0.14 * Math.sin(x * 2 + seedOffset)), z * rz * ridge * taper);
+    }
+    geo.computeVertexNormals();
+    return geo;
+  };
+
+  // Left headland (flat top strictly at y = 1.28 to support starmap dome at (-7.1, 1.28, 1.35))
   const leftCape = new THREE.Group();
-  const leftBase = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(3.4, 4.8, 1.4, 8)), matBasalt);
-  leftBase.position.set(-7.1, 0.58, 1.35);
+  const leftBase = new THREE.Mesh(buildBasaltTerraceGeo(3.35, 4.75, 1.48, 1.2), matBasalt);
+  leftBase.position.set(-7.1, 0.54, 1.35); // top at 0.54 + 0.74 = 1.28
   leftBase.receiveShadow = true;
   leftBase.castShadow = true;
   leftCape.add(leftBase);
 
-  const leftCrag = new THREE.Mesh(trackGeo(new THREE.ConeGeometry(2.4, 3.1, 7)), matBasalt);
-  leftCrag.position.set(-10.2, 1.3, -0.8);
-  leftCrag.castShadow = true;
-  leftCape.add(leftCrag);
+  const leftShoreShelf = new THREE.Mesh(buildBasaltTerraceGeo(4.45, 5.15, 0.36, 4.1), matWetBasalt);
+  leftShoreShelf.position.set(-7.2, 0.04, 1.25);
+  leftShoreShelf.receiveShadow = true;
+  leftCape.add(leftShoreShelf);
+
+  const leftCragMain = new THREE.Mesh(buildRockCragGeo(2.35, 2.25, 2.05, 2.3), matBasalt);
+  leftCragMain.position.set(-10.4, 1.15, -0.75);
+  leftCragMain.rotation.y = 0.45;
+  leftCragMain.castShadow = true;
+  leftCragMain.receiveShadow = true;
+  leftCape.add(leftCragMain);
+
+  const leftCragSide = new THREE.Mesh(buildRockCragGeo(1.45, 1.45, 1.35, 5.8), matBasalt);
+  leftCragSide.position.set(-9.4, 0.72, -2.35);
+  leftCragSide.rotation.y = -0.7;
+  leftCragSide.castShadow = true;
+  leftCape.add(leftCragSide);
   root.add(leftCape);
 
-  // Right headland (supports terminator orrery at (7.45, 1.25, -1.65))
+  // Right headland (flat top strictly at y = 1.25 to support terminator orrery at (7.45, 1.25, -1.65))
   const rightCape = new THREE.Group();
-  const rightBase = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(2.8, 4.1, 1.35, 8)), matBasalt);
-  rightBase.position.set(7.45, 0.57, -1.65);
+  const rightBase = new THREE.Mesh(buildBasaltTerraceGeo(2.85, 4.15, 1.45, 7.4), matBasalt);
+  rightBase.position.set(7.45, 0.525, -1.65); // top at 0.525 + 0.725 = 1.25
   rightBase.receiveShadow = true;
   rightBase.castShadow = true;
   rightCape.add(rightBase);
 
-  const rightCrag = new THREE.Mesh(trackGeo(new THREE.ConeGeometry(2.6, 3.6, 7)), matBasalt);
-  rightCrag.position.set(10.8, 1.55, -3.5);
-  rightCrag.castShadow = true;
-  rightCape.add(rightCrag);
+  const rightShoreShelf = new THREE.Mesh(buildBasaltTerraceGeo(3.8, 4.45, 0.34, 9.2), matWetBasalt);
+  rightShoreShelf.position.set(7.6, 0.04, -1.8);
+  rightShoreShelf.receiveShadow = true;
+  rightCape.add(rightShoreShelf);
+
+  const rightCragMain = new THREE.Mesh(buildRockCragGeo(2.55, 2.45, 2.2, 11.1), matBasalt);
+  rightCragMain.position.set(10.85, 1.22, -3.55);
+  rightCragMain.rotation.y = -0.5;
+  rightCragMain.castShadow = true;
+  rightCragMain.receiveShadow = true;
+  rightCape.add(rightCragMain);
+
+  const rightCragSeaStack = new THREE.Mesh(buildRockCragGeo(1.3, 1.55, 1.2, 13.7), matBasalt);
+  rightCragSeaStack.position.set(10.2, 0.72, -0.35);
+  rightCragSeaStack.castShadow = true;
+  rightCape.add(rightCragSeaStack);
   root.add(rightCape);
 
-  // Distant horizon mountain islands framing the bay
-  const mountainArc: [number, number, number, number][] = [
-    [-28, -42, 9.5, 5.2],
-    [-16, -46, 8.0, 4.4],
-    [-4, -49, 7.2, 3.0],
-    [10, -47, 8.6, 4.2],
-    [24, -43, 10.2, 5.8],
-    [36, -36, 9.0, 4.6],
-    [-36, -34, 8.8, 4.8],
+  // Instanced shoreline coastal boulders & sea rocks
+  const boulderGeo = buildRockCragGeo(0.58, 0.42, 0.52, 19.3);
+  const boulderSpecs: [number, number, number, number, number][] = [
+    [-11.2, 0.05, 1.6, 1.2, 0.4],
+    [-9.8, 0.02, 3.6, 0.85, 1.8],
+    [-8.4, 0.05, -3.6, 1.15, 2.6],
+    [-4.3, 0.02, -3.8, 0.7, 0.9],
+    [-11.8, 0.12, -2.5, 1.45, 3.1],
+    [10.9, 0.06, -0.9, 1.1, 1.2],
+    [11.7, 0.1, -5.2, 1.5, 2.2],
+    [6.1, 0.03, -4.6, 0.8, 0.6],
+    [9.2, 0.04, 1.8, 0.95, 2.9],
+    [-5.8, 0.04, 5.2, 0.9, 1.4],
+    [11.4, 0.06, 3.2, 1.25, 0.3],
+    [13.6, 0.18, -7.8, 2.1, 1.7],
+    [-14.2, 0.16, -7.2, 2.2, 2.4],
   ];
-  for (const [mx, mz, mr, mh] of mountainArc) {
-    const mtn = new THREE.Mesh(trackGeo(new THREE.ConeGeometry(mr, mh, 7)), matFarMountain);
-    mtn.position.set(mx, mh * 0.42 - 0.15, mz);
-    mtn.rotation.y = mx * 0.2;
-    root.add(mtn);
+  const boulderInst = new THREE.InstancedMesh(boulderGeo, matWetBasalt, boulderSpecs.length);
+  boulderInst.receiveShadow = true;
+  boulderInst.castShadow = true;
+  for (let i = 0; i < boulderSpecs.length; i++) {
+    const [bx, by, bz, sc, rot] = boulderSpecs[i];
+    _pos.set(bx, by, bz);
+    _euler.set(seeded(i * 3) * 0.25, rot, seeded(i * 3 + 1) * 0.2);
+    _quat.setFromEuler(_euler);
+    _scale.set(sc, sc * 0.85, sc * 1.1);
+    _mat4.compose(_pos, _quat, _scale);
+    boulderInst.setMatrixAt(i, _mat4);
   }
+  boulderInst.instanceMatrix.needsUpdate = true;
+  root.add(boulderInst);
 
-  // Foreground Observatory Deck Balcony (supports thermometer, valve, lever, sky mast)
+  // Continuous Sculpted Distant Volcanic Horizon Ridge Archipelago
+  const buildHorizonRidgeMesh = (
+    arcRadius: number,
+    bandDepth: number,
+    peakGain: number,
+    seedShift: number
+  ): THREE.Mesh => {
+    const segX = 76;
+    const segZ = 8;
+    const ridgeGeo = trackGeo(new THREE.PlaneGeometry(1, 1, segX, segZ));
+    const pos = ridgeGeo.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const u = pos.getX(i) + 0.5; // 0..1 across arc
+      const v = pos.getY(i) + 0.5; // 0..1 front-to-back depth
+      const theta = -1.18 + u * 2.36; // sweeping crescent across northern horizon
+      const rad = arcRadius + (v - 0.5) * bandDepth;
+      const wx = Math.sin(theta) * rad;
+      const wz = 2.0 - Math.cos(theta) * rad;
+
+      const envDepth = Math.sin(v * Math.PI); // 0 at front/back edges, 1 along crest spine
+      const macroPeaks =
+        Math.max(0, Math.sin(u * Math.PI * 5.2 + seedShift)) * 0.65 +
+        Math.max(0, Math.cos(u * Math.PI * 9.5 - seedShift * 1.4)) * 0.35;
+      const microSerration =
+        Math.abs(Math.sin(u * 38.0 + seedShift)) * 0.18 +
+        Math.abs(Math.cos(u * 23.0 - v * 4.0)) * 0.12;
+      // Keep a calm central bay opening around u ~ 0.45..0.55 so Earth & Star shine cleanly
+      const bayNotch = 1.0 - 0.58 * Math.exp(-Math.pow((u - 0.48) / 0.13, 2));
+      const wy = -0.35 + envDepth * (0.8 + (macroPeaks + microSerration) * peakGain * bayNotch);
+
+      pos.setXYZ(i, wx, wy, wz);
+    }
+    ridgeGeo.computeVertexNormals();
+    return new THREE.Mesh(ridgeGeo, matFarMountain);
+  };
+  root.add(buildHorizonRidgeMesh(48, 12.5, 5.8, 0.7));
+  root.add(buildHorizonRidgeMesh(58, 15.0, 7.6, 2.9));
+
+  // Foreground Beveled Observatory Promenade Deck (top strictly y = 0.28 across walkable bounds)
   const deckGroup = new THREE.Group();
   const matDeckTop = trackMat(
     new THREE.MeshStandardMaterial({
@@ -551,20 +754,20 @@ export function createEnvironmentSystem(
       roughnessMap: textures.deckRoughness,
       bumpMap: textures.deckBump,
       bumpScale: 0.02,
-      color: '#2c3950',
-      roughness: 0.68,
+      color: '#2e3c54',
+      roughness: 0.64,
       metalness: 0.68,
-      envMapIntensity: 1.1,
+      envMapIntensity: 1.15,
     })
   );
   const matDeckCurb = trackMat(
     new THREE.MeshStandardMaterial({
       normalMap: textures.metalNormal,
-      normalScale: new THREE.Vector2(0.35, 0.35),
+      normalScale: new THREE.Vector2(0.38, 0.38),
       roughnessMap: textures.metalRoughness,
-      color: '#111827',
-      roughness: 0.78,
-      metalness: 0.45,
+      color: '#111927',
+      roughness: 0.74,
+      metalness: 0.52,
     })
   );
   const matRailSteel = trackMat(
@@ -572,10 +775,26 @@ export function createEnvironmentSystem(
       normalMap: textures.metalNormal,
       normalScale: new THREE.Vector2(0.3, 0.3),
       roughnessMap: textures.metalRoughness,
-      color: '#94a3b8',
-      roughness: 0.36,
-      metalness: 0.88,
-      envMapIntensity: 1.25,
+      color: '#cbd5e1',
+      roughness: 0.32,
+      metalness: 0.9,
+      envMapIntensity: 1.35,
+    })
+  );
+  const matDeckTrimCyan = trackMat(
+    new THREE.MeshStandardMaterial({
+      color: '#7dd3fc',
+      emissive: '#0ea5e9',
+      emissiveIntensity: 0.9,
+      roughness: 0.25,
+    })
+  );
+  const matDeckTrimGold = trackMat(
+    new THREE.MeshStandardMaterial({
+      color: '#fbbf24',
+      emissive: '#d97706',
+      emissiveIntensity: 0.65,
+      roughness: 0.28,
     })
   );
   const matGlassBarrier = trackMat(
@@ -589,54 +808,220 @@ export function createEnvironmentSystem(
       reflectivity: 0.92,
       envMapIntensity: 1.45,
       transparent: true,
-      opacity: 0.2,
+      opacity: 0.22,
     })
   );
 
-  // Main deck slab & lower skirt
-  const deckSlab = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(17.6, 0.36, 6.8)), matDeckTop);
-  deckSlab.position.set(0.8, 0.1, 4.5);
+  // Chamfered architectural promenade deck plate (covers walkable x in [-7.35, 8.9], z in [1.65, 7.35])
+  const buildChamferedDeckShape = (pad: number): THREE.Shape => {
+    const s = new THREE.Shape();
+    const xL = -7.95 - pad;
+    const xR = 9.45 + pad;
+    const zFront = 1.15 - pad;
+    const zBack = 7.95 + pad;
+    const chamfer = 0.95;
+    // Shape Y maps to -Z after rotateX(-PI/2)
+    s.moveTo(xL + chamfer, -zFront);
+    s.lineTo(xR - chamfer, -zFront);
+    s.lineTo(xR, -(zFront + chamfer));
+    s.lineTo(xR, -zBack);
+    s.lineTo(xL, -zBack);
+    s.lineTo(xL, -(zFront + chamfer));
+    s.closePath();
+    return s;
+  };
+
+  const deckTopGeo = trackGeo(
+    new THREE.ExtrudeGeometry(buildChamferedDeckShape(0), {
+      depth: 0.22,
+      bevelEnabled: true,
+      bevelThickness: 0.055,
+      bevelSize: 0.09,
+      bevelSegments: 2,
+    })
+  );
+  deckTopGeo.rotateX(-Math.PI / 2);
+  // Normalize top UVs to world meters so plate seams & rivets stay crisp
+  {
+    const pos = deckTopGeo.attributes.position as THREE.BufferAttribute;
+    const uv = deckTopGeo.attributes.uv as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      uv.setXY(i, (pos.getX(i) + 8.5) / 18.0, (pos.getZ(i) + 1.0) / 7.2);
+    }
+    uv.needsUpdate = true;
+    deckTopGeo.computeVertexNormals();
+  }
+  const deckSlab = new THREE.Mesh(deckTopGeo, matDeckTop);
+  deckSlab.position.y = 0.28 - (0.22 + 0.055); // exact top face at y = 0.28
   deckSlab.receiveShadow = true;
+  deckSlab.castShadow = true;
   deckGroup.add(deckSlab);
 
-  const deckCurb = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(18.0, 0.24, 7.1)), matDeckCurb);
-  deckCurb.position.set(0.8, -0.02, 4.5);
+  // Lower structural dark substructure skirt
+  const deckCurbGeo = trackGeo(
+    new THREE.ExtrudeGeometry(buildChamferedDeckShape(0.22), {
+      depth: 0.2,
+      bevelEnabled: true,
+      bevelThickness: 0.04,
+      bevelSize: 0.08,
+      bevelSegments: 2,
+    })
+  );
+  deckCurbGeo.rotateX(-Math.PI / 2);
+  deckCurbGeo.computeVertexNormals();
+  const deckCurb = new THREE.Mesh(deckCurbGeo, matDeckCurb);
+  deckCurb.position.y = -0.18;
   deckCurb.receiveShadow = true;
   deckGroup.add(deckCurb);
 
-  // Front safety railing along central ocean edge (x in [-5.6, 6.3]), leaving portals open to left/right ramps
-  const topRail = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.038, 0.038, 12.0, 12)), matRailSteel);
+  // Engraved Observatory Compass Medallion Decal seated flush on deck center
+  const compassDecalGeo = trackGeo(new THREE.PlaneGeometry(5.6, 5.6));
+  compassDecalGeo.rotateX(-Math.PI / 2);
+  const compassDecalMat = trackMat(
+    new THREE.MeshStandardMaterial({
+      map: textures.compassDecal,
+      transparent: true,
+      opacity: 0.86,
+      roughness: 0.45,
+      metalness: 0.35,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+    })
+  );
+  const compassDecalMesh = new THREE.Mesh(compassDecalGeo, compassDecalMat);
+  compassDecalMesh.position.set(0.55, 0.284, 4.45);
+  compassDecalMesh.receiveShadow = true;
+  deckGroup.add(compassDecalMesh);
+
+  // Subtle recessed perimeter edge light bar along front ocean promenade
+  const frontTrimStrip = new THREE.Mesh(
+    trackGeo(new THREE.BoxGeometry(15.2, 0.045, 0.06)),
+    matDeckTrimCyan
+  );
+  frontTrimStrip.position.set(0.75, 0.14, 1.07);
+  deckGroup.add(frontTrimStrip);
+
+  // Under-deck cantilevered support pilings & cross-girders descending into the ocean
+  const pilingPositions: [number, number][] = [
+    [-5.8, 1.55],
+    [0.75, 1.55],
+    [7.2, 1.55],
+    [-5.8, 6.8],
+    [0.75, 6.8],
+    [7.2, 6.8],
+  ];
+  const pilingGeo = trackGeo(new THREE.CylinderGeometry(0.28, 0.34, 1.9, 14));
+  const pilingCollarGeo = trackGeo(new THREE.CylinderGeometry(0.42, 0.46, 0.22, 14));
+  for (const [px, pz] of pilingPositions) {
+    const piling = new THREE.Mesh(pilingGeo, matDeckCurb);
+    piling.position.set(px, -0.82, pz);
+    deckGroup.add(piling);
+    const collar = new THREE.Mesh(pilingCollarGeo, matRailSteel);
+    collar.position.set(px, 0.02, pz);
+    deckGroup.add(collar);
+  }
+
+  // Front safety railing along central ocean edge (x in [-5.6, 6.3]), keeping left/right ramp portals clear
+  const topRail = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.04, 0.04, 12.1, 14)), matRailSteel);
   topRail.rotation.z = Math.PI / 2;
-  topRail.position.set(0.35, 1.02, 1.2);
+  topRail.position.set(0.35, 1.04, 1.2);
   topRail.castShadow = true;
   deckGroup.add(topRail);
 
-  const glassWall = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(11.9, 0.68, 0.04)), matGlassBarrier);
-  glassWall.position.set(0.35, 0.64, 1.2);
+  const midRail = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.018, 0.018, 12.0, 10)), matRailSteel);
+  midRail.rotation.z = Math.PI / 2;
+  midRail.position.set(0.35, 0.56, 1.2);
+  deckGroup.add(midRail);
+
+  const glassWall = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(11.88, 0.66, 0.036)), matGlassBarrier);
+  glassWall.position.set(0.35, 0.65, 1.2);
   deckGroup.add(glassWall);
 
+  const stanchionBaseGeo = trackGeo(new THREE.CylinderGeometry(0.085, 0.1, 0.06, 8));
+  const stanchionPostGeo = trackGeo(new THREE.CylinderGeometry(0.036, 0.052, 0.78, 12));
+  const stanchionCapGeo = trackGeo(new THREE.SphereGeometry(0.048, 10, 8));
   for (let px = -5.6; px <= 6.35; px += 2.38) {
-    const post = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.04, 0.045, 0.78, 10)), matRailSteel);
-    post.position.set(px, 0.65, 1.2);
+    const baseFlange = new THREE.Mesh(stanchionBaseGeo, matDeckCurb);
+    baseFlange.position.set(px, 0.31, 1.2);
+    deckGroup.add(baseFlange);
+
+    const post = new THREE.Mesh(stanchionPostGeo, matRailSteel);
+    post.position.set(px, 0.67, 1.2);
     post.castShadow = true;
     deckGroup.add(post);
+
+    const cap = new THREE.Mesh(stanchionCapGeo, matDeckTrimGold);
+    cap.position.set(px, 1.06, 1.2);
+    deckGroup.add(cap);
   }
 
-  // Right coastal walkway ramp (z = 1.3 y=0.28 -> z = -0.75 y=1.25)
-  const rightRamp = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(1.75, 0.16, 2.35)), matDeckTop);
-  rightRamp.position.set(7.45, 0.72, 0.25);
-  rightRamp.rotation.x = Math.atan2(1.25 - 0.28, 2.05);
-  rightRamp.receiveShadow = true;
-  rightRamp.castShadow = true;
-  deckGroup.add(rightRamp);
+  // Mooring bollards at outer chamfered front deck corners
+  const bollardGeo = trackGeo(new THREE.CylinderGeometry(0.11, 0.15, 0.38, 12));
+  const bollardCapGeo = trackGeo(new THREE.CylinderGeometry(0.14, 0.11, 0.08, 12));
+  for (const bx of [-7.35, 8.75]) {
+    const bol = new THREE.Mesh(bollardGeo, matDeckCurb);
+    bol.position.set(bx, 0.47, 1.85);
+    bol.castShadow = true;
+    deckGroup.add(bol);
+    const bCap = new THREE.Mesh(bollardCapGeo, matRailSteel);
+    bCap.position.set(bx, 0.69, 1.85);
+    deckGroup.add(bCap);
+  }
 
-  // Left headland ramp (z = 3.1 y=0.28 -> z = 1.95 y=1.28)
-  const leftRamp = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(1.85, 0.16, 1.6)), matDeckTop);
-  leftRamp.position.set(-6.5, 0.74, 2.45);
-  leftRamp.rotation.x = Math.atan2(1.28 - 0.28, 1.15);
-  leftRamp.receiveShadow = true;
-  leftRamp.castShadow = true;
-  deckGroup.add(leftRamp);
+  // Right coastal walkway bridge ramp (z = 1.3 y=0.28 -> z = -0.75 y=1.25) with side stringers & tread cleats
+  const rightRampSlope = Math.atan2(1.25 - 0.28, 2.05);
+  const rightRampGroup = new THREE.Group();
+  rightRampGroup.position.set(7.45, 0.72, 0.25);
+  rightRampGroup.rotation.x = rightRampSlope;
+
+  const rightRampDeck = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(1.72, 0.16, 2.38)), matDeckTop);
+  rightRampDeck.receiveShadow = true;
+  rightRampDeck.castShadow = true;
+  rightRampGroup.add(rightRampDeck);
+
+  for (const sx of [-0.88, 0.88]) {
+    const stringer = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.08, 0.24, 2.42)), matDeckCurb);
+    stringer.position.set(sx, 0.02, 0);
+    rightRampGroup.add(stringer);
+    const handrail = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.026, 0.026, 2.32, 10)), matRailSteel);
+    handrail.rotation.x = Math.PI / 2;
+    handrail.position.set(sx, 0.56, 0);
+    rightRampGroup.add(handrail);
+  }
+  for (let rz = -0.95; rz <= 0.95; rz += 0.32) {
+    const cleat = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(1.48, 0.02, 0.06)), matRailSteel);
+    cleat.position.set(0, 0.085, rz);
+    rightRampGroup.add(cleat);
+  }
+  deckGroup.add(rightRampGroup);
+
+  // Left headland bridge ramp (z = 3.1 y=0.28 -> z = 1.95 y=1.28) with side stringers & tread cleats
+  const leftRampSlope = Math.atan2(1.28 - 0.28, 1.15);
+  const leftRampGroup = new THREE.Group();
+  leftRampGroup.position.set(-6.5, 0.74, 2.45);
+  leftRampGroup.rotation.x = leftRampSlope;
+
+  const leftRampDeck = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(1.84, 0.16, 1.62)), matDeckTop);
+  leftRampDeck.receiveShadow = true;
+  leftRampDeck.castShadow = true;
+  leftRampGroup.add(leftRampDeck);
+
+  for (const sx of [-0.94, 0.94]) {
+    const stringer = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.08, 0.24, 1.66)), matDeckCurb);
+    stringer.position.set(sx, 0.02, 0);
+    leftRampGroup.add(stringer);
+    const handrail = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.026, 0.026, 1.56, 10)), matRailSteel);
+    handrail.rotation.x = Math.PI / 2;
+    handrail.position.set(sx, 0.56, 0);
+    leftRampGroup.add(handrail);
+  }
+  for (let rz = -0.62; rz <= 0.62; rz += 0.31) {
+    const cleat = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(1.58, 0.02, 0.06)), matRailSteel);
+    cleat.position.set(0, 0.085, rz);
+    leftRampGroup.add(cleat);
+  }
+  deckGroup.add(leftRampGroup);
 
   root.add(deckGroup);
 
@@ -846,6 +1231,7 @@ export function createEnvironmentSystem(
       textures.oceanNormal.offset.set(tSec * 0.015, tSec * 0.01);
 
       const iceBlend = Math.max(0, Math.min(1, (state.albedo - 0.31) / 0.31));
+      oceanIceUniform.value = iceBlend;
       const hotBlend = Math.max(0, Math.min(1, (state.tempK - 335) / 85));
       _c1.set('#0e3c68').lerp(_c2.set('#a8cde8'), iceBlend * 0.78);
       _c1.lerp(_c3.set('#5a2d1d'), hotBlend * 0.62);

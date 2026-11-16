@@ -168,18 +168,47 @@ export function createExplorerSystem(textures: ObservatoryTextures): ExplorerSys
   const bodyRig = new THREE.Group();
   group.add(bodyRig);
 
-  // Legs (pivoted at hip y = 0.62)
+  // Legs (pivoted at hip y = 0.62) — articulated thigh, knee armor pad, shin greave & beveled EVA boot
+  const bootShape = new THREE.Shape();
+  bootShape.moveTo(-0.08, 0.0);
+  bootShape.lineTo(0.14, 0.0);
+  bootShape.lineTo(0.15, 0.06);
+  bootShape.lineTo(0.08, 0.13);
+  bootShape.lineTo(-0.08, 0.14);
+  bootShape.closePath();
+  const bootGeo = trackGeo(
+    new THREE.ExtrudeGeometry(bootShape, {
+      depth: 0.12,
+      bevelEnabled: true,
+      bevelThickness: 0.02,
+      bevelSize: 0.02,
+      bevelSegments: 2,
+    })
+  );
+  bootGeo.translate(0, 0, -0.06);
+  bootGeo.rotateY(-Math.PI / 2); // toe points +Z
+  bootGeo.computeVertexNormals();
+
   const makeLeg = (xOff: number) => {
     const hip = new THREE.Group();
     hip.position.set(xOff, 0.62, 0);
 
-    const thigh = new THREE.Mesh(trackGeo(new THREE.CapsuleGeometry(0.095, 0.28, 6, 10)), matSuitNavy);
-    thigh.position.y = -0.22;
+    const thigh = new THREE.Mesh(trackGeo(new THREE.CapsuleGeometry(0.092, 0.18, 6, 12)), matSuitNavy);
+    thigh.position.y = -0.15;
     thigh.castShadow = true;
     hip.add(thigh);
 
-    const boot = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.16, 0.14, 0.24)), matBoot);
-    boot.position.set(0, -0.54, 0.04);
+    const kneePad = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.088, 0.082, 0.075, 12)), matSuitWhite);
+    kneePad.position.set(0, -0.29, 0.015);
+    hip.add(kneePad);
+
+    const shin = new THREE.Mesh(trackGeo(new THREE.CapsuleGeometry(0.082, 0.16, 6, 12)), matSuitWhite);
+    shin.position.y = -0.41;
+    shin.castShadow = true;
+    hip.add(shin);
+
+    const boot = new THREE.Mesh(bootGeo, matBoot);
+    boot.position.set(0, -0.61, 0.02);
     boot.castShadow = true;
     hip.add(boot);
 
@@ -189,41 +218,106 @@ export function createExplorerSystem(textures: ObservatoryTextures): ExplorerSys
   const rightLeg = makeLeg(0.14);
   bodyRig.add(leftLeg, rightLeg);
 
-  // Torso & Backpack
-  const torso = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.24, 0.2, 0.56, 14)), matSuitWhite);
-  torso.position.y = 0.92;
+  // Contoured LatheGeometry EVA Torso + Armored Chest Telemetry Plate + Utility Belt
+  const torsoProfile = [
+    new THREE.Vector2(0.0, 0.0),
+    new THREE.Vector2(0.185, 0.0),
+    new THREE.Vector2(0.205, 0.12),
+    new THREE.Vector2(0.255, 0.36),
+    new THREE.Vector2(0.245, 0.52),
+    new THREE.Vector2(0.175, 0.58),
+    new THREE.Vector2(0.0, 0.58),
+  ];
+  const torso = new THREE.Mesh(trackGeo(new THREE.LatheGeometry(torsoProfile, 18)), matSuitWhite);
+  torso.position.y = 0.64;
+  torso.scale.set(1.06, 1.0, 0.88);
   torso.castShadow = true;
   bodyRig.add(torso);
 
-  const belt = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.215, 0.215, 0.08, 14)), matAccentOrange);
-  belt.position.y = 0.66;
+  const belt = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.21, 0.21, 0.085, 16)), matAccentOrange);
+  belt.position.y = 0.68;
+  belt.scale.set(1.04, 1, 0.9);
   bodyRig.add(belt);
 
-  const chestBadge = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.18, 0.12, 0.04)), matGlowCyan);
-  chestBadge.position.set(0, 0.98, 0.22);
+  const beltBuckle = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.09, 0.065, 0.04)), matBoot);
+  beltBuckle.position.set(0, 0.68, 0.19);
+  bodyRig.add(beltBuckle);
+
+  // Front PLSS Chest Control Unit
+  const chestHousing = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.24, 0.18, 0.08)), matSuitNavy);
+  chestHousing.position.set(0, 0.98, 0.195);
+  chestHousing.castShadow = true;
+  bodyRig.add(chestHousing);
+
+  const chestBadge = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.15, 0.09, 0.025)), matGlowCyan);
+  chestBadge.position.set(0, 0.99, 0.235);
   bodyRig.add(chestBadge);
 
-  const pack = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.32, 0.42, 0.18)), matSuitNavy);
-  pack.position.set(0, 0.95, -0.24);
+  // Beveled PLSS Life-Support Backpack + Twin Oxygen Tanks
+  const packShape = new THREE.Shape();
+  packShape.moveTo(-0.14, -0.2);
+  packShape.lineTo(0.14, -0.2);
+  packShape.lineTo(0.16, 0.16);
+  packShape.lineTo(0.1, 0.22);
+  packShape.lineTo(-0.1, 0.22);
+  packShape.lineTo(-0.16, 0.16);
+  packShape.closePath();
+  const packGeo = trackGeo(
+    new THREE.ExtrudeGeometry(packShape, {
+      depth: 0.16,
+      bevelEnabled: true,
+      bevelThickness: 0.025,
+      bevelSize: 0.025,
+      bevelSegments: 2,
+    })
+  );
+  packGeo.translate(0, 0, -0.08);
+  packGeo.computeVertexNormals();
+  const pack = new THREE.Mesh(packGeo, matSuitNavy);
+  pack.position.set(0, 0.96, -0.24);
   pack.castShadow = true;
   bodyRig.add(pack);
 
-  const packStrip = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.06, 0.28, 0.03)), matGlowCyan);
-  packStrip.position.set(0, 0.95, -0.34);
+  const oxyTankGeo = trackGeo(new THREE.CapsuleGeometry(0.052, 0.24, 6, 10));
+  for (const tx of [-0.085, 0.085]) {
+    const tank = new THREE.Mesh(oxyTankGeo, matSuitWhite);
+    tank.position.set(tx, 0.95, -0.34);
+    tank.castShadow = true;
+    bodyRig.add(tank);
+  }
+
+  const packStrip = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.045, 0.24, 0.025)), matGlowCyan);
+  packStrip.position.set(0, 0.97, -0.355);
   bodyRig.add(packStrip);
 
-  // Arms (pivoted at shoulder y = 1.12)
+  // Arms (pivoted at shoulder y = 1.12) with contoured pauldrons, elbow cuffs & right wrist scanner
   const makeArm = (xOff: number) => {
     const shoulder = new THREE.Group();
     shoulder.position.set(xOff, 1.12, 0);
 
-    const sleeve = new THREE.Mesh(trackGeo(new THREE.CapsuleGeometry(0.072, 0.26, 6, 10)), matSuitWhite);
+    const pauldron = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.098, 12, 10)), matSuitWhite);
+    pauldron.scale.set(1.08, 0.88, 1.04);
+    pauldron.castShadow = true;
+    shoulder.add(pauldron);
+
+    const sleeve = new THREE.Mesh(trackGeo(new THREE.CapsuleGeometry(0.068, 0.24, 6, 10)), matSuitWhite);
     sleeve.position.y = -0.18;
     sleeve.castShadow = true;
     shoulder.add(sleeve);
 
-    const glove = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.078, 10, 8)), matAccentOrange);
-    glove.position.y = -0.38;
+    const cuff = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.075, 0.075, 0.055, 12)), matSuitNavy);
+    cuff.position.y = -0.3;
+    shoulder.add(cuff);
+
+    if (xOff > 0) {
+      const wristScreen = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.04, 0.075, 0.065)), matGlowCyan);
+      wristScreen.position.set(0.055, -0.29, 0.02);
+      shoulder.add(wristScreen);
+    }
+
+    const glove = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.076, 10, 8)), matAccentOrange);
+    glove.scale.set(0.95, 1.1, 1.05);
+    glove.position.y = -0.39;
     shoulder.add(glove);
 
     return shoulder;
@@ -232,42 +326,81 @@ export function createExplorerSystem(textures: ObservatoryTextures): ExplorerSys
   const rightArm = makeArm(0.31);
   bodyRig.add(leftArm, rightArm);
 
-  // Helmet & Visor
-  const helmet = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.24, 18, 14)), matSuitWhite);
-  helmet.position.y = 1.42;
+  // Contoured Neck Seal + Sculpted EVA Helmet + Raised Sun-Visor Brow Cowl
+  const neckSeal = new THREE.Mesh(trackGeo(new THREE.TorusGeometry(0.165, 0.028, 10, 22)), matAccentOrange);
+  neckSeal.rotation.x = Math.PI / 2;
+  neckSeal.position.y = 1.24;
+  bodyRig.add(neckSeal);
+
+  const helmet = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.245, 22, 16)), matSuitWhite);
+  helmet.scale.set(1.0, 0.98, 1.04);
+  helmet.position.y = 1.44;
   helmet.castShadow = true;
   bodyRig.add(helmet);
 
+  const browCowl = new THREE.Mesh(
+    trackGeo(new THREE.TorusGeometry(0.21, 0.032, 8, 18, Math.PI * 0.9)),
+    matSuitNavy
+  );
+  browCowl.position.set(0, 1.49, 0.05);
+  browCowl.rotation.set(0.28, 0, Math.PI * 0.05);
+  bodyRig.add(browCowl);
+
   const visor = new THREE.Mesh(
-    trackGeo(new THREE.SphereGeometry(0.215, 16, 12, -Math.PI * 0.4, Math.PI * 0.8, Math.PI * 0.22, Math.PI * 0.5)),
+    trackGeo(new THREE.SphereGeometry(0.215, 18, 14, -Math.PI * 0.42, Math.PI * 0.84, Math.PI * 0.22, Math.PI * 0.5)),
     matVisorGold
   );
-  visor.position.set(0, 1.42, 0.06);
+  visor.position.set(0, 1.43, 0.068);
   visor.rotation.y = Math.PI / 2;
   bodyRig.add(visor);
 
-  const antenna = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.012, 0.015, 0.18, 8)), matBoot);
-  antenna.position.set(0.18, 1.62, -0.05);
+  const earPodGeo = trackGeo(new THREE.CylinderGeometry(0.058, 0.058, 0.045, 12));
+  earPodGeo.rotateZ(Math.PI / 2);
+  for (const ex of [-0.24, 0.24]) {
+    const pod = new THREE.Mesh(earPodGeo, matSuitNavy);
+    pod.position.set(ex, 1.43, 0);
+    bodyRig.add(pod);
+  }
+
+  const antenna = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.011, 0.015, 0.22, 8)), matBoot);
+  antenna.position.set(0.21, 1.63, -0.04);
   bodyRig.add(antenna);
 
-  const beaconTip = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.035, 10, 8)), matGlowCyan);
-  beaconTip.position.set(0.18, 1.72, -0.05);
+  const beaconTip = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.034, 10, 8)), matGlowCyan);
+  beaconTip.position.set(0.21, 1.75, -0.04);
   bodyRig.add(beaconTip);
 
-  // Ground shadow ring beneath explorer
+  // Soft Ground Contact Shadow + Subtle Explorer Foot Locator Ring
+  const contactShadowMesh = new THREE.Mesh(
+    trackGeo(new THREE.PlaneGeometry(0.95, 0.95)),
+    trackMat(
+      new THREE.MeshBasicMaterial({
+        map: textures.contactShadow,
+        transparent: true,
+        opacity: 0.72,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+      })
+    )
+  );
+  contactShadowMesh.rotation.x = -Math.PI / 2;
+  contactShadowMesh.position.y = 0.01;
+  group.add(contactShadowMesh);
+
   const footRing = new THREE.Mesh(
-    trackGeo(new THREE.RingGeometry(0.26, 0.34, 24)),
+    trackGeo(new THREE.RingGeometry(0.28, 0.35, 28)),
     trackMat(
       new THREE.MeshBasicMaterial({
         color: '#38bdf8',
         transparent: true,
-        opacity: 0.45,
+        opacity: 0.42,
         side: THREE.DoubleSide,
       })
     )
   );
   footRing.rotation.x = -Math.PI / 2;
-  footRing.position.y = 0.02;
+  footRing.position.y = 0.022;
   group.add(footRing);
 
   // Holographic Wrist Scanner Beam (hidden until inspecting an object)

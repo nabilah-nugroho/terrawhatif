@@ -143,24 +143,46 @@ export function createCompanionSystem(textures: ObservatoryTextures): CompanionS
   chestFluff.castShadow = true;
   bodyRig.add(chestFluff);
 
-  // Mini Astro-Harness & Dorsal Sensor Pack
+  // Mini Astro-Harness & Beveled Dorsal Thruster Pack
   const harness = new THREE.Mesh(
-    trackGeo(new THREE.TorusGeometry(0.148, 0.024, 8, 18)),
+    trackGeo(new THREE.TorusGeometry(0.148, 0.024, 8, 20)),
     matHarnessTeal
   );
   harness.position.set(0, 0.27, 0.05);
   bodyRig.add(harness);
 
-  const miniPack = new THREE.Mesh(
-    trackGeo(new THREE.BoxGeometry(0.15, 0.075, 0.16)),
-    matGearSlate
+  const pupPackShape = new THREE.Shape();
+  pupPackShape.moveTo(-0.075, -0.08);
+  pupPackShape.lineTo(0.075, -0.08);
+  pupPackShape.lineTo(0.065, 0.08);
+  pupPackShape.lineTo(-0.065, 0.08);
+  pupPackShape.closePath();
+  const pupPackGeo = trackGeo(
+    new THREE.ExtrudeGeometry(pupPackShape, {
+      depth: 0.06,
+      bevelEnabled: true,
+      bevelThickness: 0.015,
+      bevelSize: 0.015,
+      bevelSegments: 2,
+    })
   );
-  miniPack.position.set(0, 0.415, -0.02);
+  pupPackGeo.rotateX(-Math.PI / 2);
+  pupPackGeo.computeVertexNormals();
+  const miniPack = new THREE.Mesh(pupPackGeo, matGearSlate);
+  miniPack.position.set(0, 0.38, -0.02);
   miniPack.castShadow = true;
   bodyRig.add(miniPack);
 
+  const thrusterGeo = trackGeo(new THREE.CylinderGeometry(0.018, 0.026, 0.045, 10));
+  for (const tx of [-0.045, 0.045]) {
+    const thruster = new THREE.Mesh(thrusterGeo, matGearSlate);
+    thruster.rotation.x = Math.PI / 2;
+    thruster.position.set(tx, 0.41, -0.11);
+    bodyRig.add(thruster);
+  }
+
   const packBeacon = new THREE.Mesh(
-    trackGeo(new THREE.CylinderGeometry(0.028, 0.028, 0.025, 12)),
+    trackGeo(new THREE.CylinderGeometry(0.026, 0.026, 0.025, 12)),
     matGlowTag
   );
   packBeacon.position.set(0, 0.46, -0.02);
@@ -203,39 +225,51 @@ export function createCompanionSystem(textures: ObservatoryTextures): CompanionS
   const legBR = makeLeg(0.085, -0.145);
   bodyRig.add(legFL, legFR, legBL, legBR);
 
-  // Wagging Tail
+  // Gracefully Arched Wagging Tail (TubeGeometry + Fluffy Cream Tip)
   const tailPivot = new THREE.Group();
   tailPivot.position.set(0, 0.34, -0.22);
   bodyRig.add(tailPivot);
 
+  const tailCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0.08, -0.08),
+    new THREE.Vector3(0, 0.17, -0.11),
+    new THREE.Vector3(0, 0.22, -0.04),
+  ]);
   const tailBase = new THREE.Mesh(
-    trackGeo(new THREE.CapsuleGeometry(0.04, 0.14, 6, 10)),
+    trackGeo(new THREE.TubeGeometry(tailCurve, 16, 0.038, 10, false)),
     matFurGolden
   );
-  tailBase.position.set(0, 0.08, -0.06);
-  tailBase.rotation.x = -0.62;
   tailBase.castShadow = true;
   tailPivot.add(tailBase);
 
   const tailTip = new THREE.Mesh(
-    trackGeo(new THREE.SphereGeometry(0.046, 10, 8)),
+    trackGeo(new THREE.SphereGeometry(0.048, 10, 8)),
     matFurCream
   );
-  tailTip.position.set(0, 0.15, -0.115);
+  tailTip.position.set(0, 0.22, -0.04);
   tailPivot.add(tailTip);
 
-  // Articulated Puppy Head + Space Bubble Helmet
+  // Articulated Puppy Head + Cheek Tufts + Space Bubble Helmet
   const headGroup = new THREE.Group();
   headGroup.position.set(0, 0.42, 0.21);
   bodyRig.add(headGroup);
 
   const cranium = new THREE.Mesh(
-    trackGeo(new THREE.SphereGeometry(0.145, 16, 14)),
+    trackGeo(new THREE.SphereGeometry(0.145, 18, 14)),
     matFurGolden
   );
   cranium.scale.set(1.04, 0.96, 1.0);
   cranium.castShadow = true;
   headGroup.add(cranium);
+
+  const cheekGeo = trackGeo(new THREE.SphereGeometry(0.064, 10, 8));
+  for (const cx of [-0.115, 0.115]) {
+    const cheek = new THREE.Mesh(cheekGeo, matFurCream);
+    cheek.position.set(cx, -0.038, 0.04);
+    cheek.scale.set(0.92, 0.85, 1.05);
+    headGroup.add(cheek);
+  }
 
   const muzzle = new THREE.Mesh(
     trackGeo(new THREE.SphereGeometry(0.078, 12, 10)),
@@ -317,7 +351,24 @@ export function createCompanionSystem(textures: ObservatoryTextures): CompanionS
   bubbleHelmet.renderOrder = 2;
   headGroup.add(bubbleHelmet);
 
-  // Soft Ground Shadow / Collar Ping Ring
+  // Soft Ground Contact Shadow + Collar Ping Ring
+  const pupShadowMesh = new THREE.Mesh(
+    trackGeo(new THREE.PlaneGeometry(0.68, 0.78)),
+    trackMat(
+      new THREE.MeshBasicMaterial({
+        map: textures.contactShadow,
+        transparent: true,
+        opacity: 0.65,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+      })
+    )
+  );
+  pupShadowMesh.rotation.x = -Math.PI / 2;
+  pupShadowMesh.position.y = 0.008;
+  group.add(pupShadowMesh);
+
   const footRing = new THREE.Mesh(
     trackGeo(new THREE.RingGeometry(0.18, 0.24, 24)),
     trackMat(

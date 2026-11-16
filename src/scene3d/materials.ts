@@ -21,6 +21,8 @@ export interface ObservatoryTextures {
   earthNight: THREE.CanvasTexture;
   radialGlow: THREE.CanvasTexture;
   vaporPuff: THREE.CanvasTexture;
+  contactShadow: THREE.CanvasTexture;
+  compassDecal: THREE.CanvasTexture;
   dispose: () => void;
 }
 
@@ -473,6 +475,103 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
   vaporPuff.colorSpace = THREE.SRGBColorSpace;
   vaporPuff.needsUpdate = true;
 
+  // 8. Soft Contact Shadow Radial Vignette (for actors & instruments)
+  const [csC, csCtx] = makeCanvas(128, 128);
+  const csg = csCtx.createRadialGradient(64, 64, 6, 64, 64, 62);
+  csg.addColorStop(0, 'rgba(3, 7, 16, 0.72)');
+  csg.addColorStop(0.42, 'rgba(4, 10, 22, 0.42)');
+  csg.addColorStop(0.78, 'rgba(4, 10, 22, 0.12)');
+  csg.addColorStop(1, 'rgba(4, 10, 22, 0)');
+  csCtx.fillStyle = csg;
+  csCtx.fillRect(0, 0, 128, 128);
+  const contactShadow = new THREE.CanvasTexture(csC);
+  contactShadow.colorSpace = THREE.SRGBColorSpace;
+  contactShadow.needsUpdate = true;
+
+  // 9. Engraved Observatory Deck Orbital Medallion Decal
+  const [cmpC, cmpCtx] = makeCanvas(1024, 1024);
+  cmpCtx.clearRect(0, 0, 1024, 1024);
+  const cx = 512;
+  const cy = 512;
+
+  // Subtle dark slate inner medallion disc wash
+  const discGrad = cmpCtx.createRadialGradient(cx, cy, 40, cx, cy, 470);
+  discGrad.addColorStop(0, 'rgba(14, 24, 42, 0.52)');
+  discGrad.addColorStop(0.72, 'rgba(18, 30, 52, 0.32)');
+  discGrad.addColorStop(1, 'rgba(18, 30, 52, 0)');
+  cmpCtx.fillStyle = discGrad;
+  cmpCtx.beginPath();
+  cmpCtx.arc(cx, cy, 470, 0, Math.PI * 2);
+  cmpCtx.fill();
+
+  // Concentric orbital gold & cyan hairline rings
+  const ringSpecs: [number, string, number, number[]][] = [
+    [456, 'rgba(125, 211, 252, 0.42)', 4, []],
+    [438, 'rgba(251, 191, 36, 0.34)', 2, [10, 8]],
+    [352, 'rgba(148, 163, 184, 0.34)', 2.5, []],
+    [258, 'rgba(56, 189, 248, 0.36)', 2.5, [16, 10]],
+    [146, 'rgba(251, 191, 36, 0.38)', 2, []],
+    [68, 'rgba(125, 211, 252, 0.45)', 3, []],
+  ];
+  for (const [rad, col, lw, dash] of ringSpecs) {
+    cmpCtx.save();
+    cmpCtx.strokeStyle = col;
+    cmpCtx.lineWidth = lw;
+    cmpCtx.setLineDash(dash);
+    cmpCtx.beginPath();
+    cmpCtx.arc(cx, cy, rad, 0, Math.PI * 2);
+    cmpCtx.stroke();
+    cmpCtx.restore();
+  }
+
+  // Degree tick marks around outer azimuth ring
+  for (let deg = 0; deg < 360; deg += 5) {
+    const a = (deg * Math.PI) / 180;
+    const isMajor = deg % 30 === 0;
+    const isMid = deg % 15 === 0;
+    const r0 = isMajor ? 412 : isMid ? 424 : 430;
+    const r1 = 448;
+    cmpCtx.strokeStyle = isMajor
+      ? 'rgba(251, 191, 36, 0.58)'
+      : 'rgba(148, 163, 184, 0.36)';
+    cmpCtx.lineWidth = isMajor ? 3 : 1.5;
+    cmpCtx.beginPath();
+    cmpCtx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0);
+    cmpCtx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+    cmpCtx.stroke();
+  }
+
+  // Crosshair & diagonal sightlines
+  for (let k = 0; k < 4; k++) {
+    const a = (k * Math.PI) / 4;
+    cmpCtx.strokeStyle = k % 2 === 0 ? 'rgba(125, 211, 252, 0.28)' : 'rgba(148, 163, 184, 0.16)';
+    cmpCtx.lineWidth = k % 2 === 0 ? 2.5 : 1.5;
+    cmpCtx.beginPath();
+    cmpCtx.moveTo(cx + Math.cos(a) * 82, cy + Math.sin(a) * 82);
+    cmpCtx.lineTo(cx + Math.cos(a) * 405, cy + Math.sin(a) * 405);
+    cmpCtx.stroke();
+  }
+
+  // Miniature stylized planet nodes along orbital rings
+  const orbNodes: [number, number, string][] = [
+    [258, -0.55, '#38bdf8'],
+    [352, 2.25, '#fbbf24'],
+    [146, 1.15, '#34d399'],
+  ];
+  for (const [nr, ang, col] of orbNodes) {
+    const nx = cx + Math.cos(ang) * nr;
+    const ny = cy + Math.sin(ang) * nr;
+    cmpCtx.fillStyle = col;
+    cmpCtx.beginPath();
+    cmpCtx.arc(nx, ny, 8, 0, Math.PI * 2);
+    cmpCtx.fill();
+  }
+
+  const compassDecal = new THREE.CanvasTexture(cmpC);
+  compassDecal.colorSpace = THREE.SRGBColorSpace;
+  compassDecal.anisotropy = maxAniso;
+  compassDecal.needsUpdate = true;
+
   const all = [
     deckColor,
     deckBump,
@@ -494,6 +593,8 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
     earthNight,
     radialGlow,
     vaporPuff,
+    contactShadow,
+    compassDecal,
   ];
 
   return {
@@ -517,6 +618,8 @@ export function createObservatoryTextures(maxAniso: number): ObservatoryTextures
     earthNight,
     radialGlow,
     vaporPuff,
+    contactShadow,
+    compassDecal,
     dispose: () => {
       for (const tex of all) tex.dispose();
     },
