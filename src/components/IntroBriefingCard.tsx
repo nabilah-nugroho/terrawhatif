@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronRight, RotateCcw } from 'lucide-react';
 import { TerraAvatar, type TerraMood } from './TerraAvatar';
 import { BrandMark } from './BrandMark';
+import { HudCorners, SectionCodeTag } from './HudReticleFrame';
 
 interface IntroBriefingCardProps {
   mood: TerraMood;
@@ -122,19 +123,24 @@ export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
     <main className="fixed inset-0 z-20 flex items-end justify-start p-4 pb-16 sm:p-7 sm:pb-20 pointer-events-none">
       <div
         onClick={skipTyping}
-        className="pointer-events-auto w-full max-w-lg obsidian-hud-strong rounded-2xl p-6 text-slate-100 space-y-5"
+        className="relative pointer-events-auto w-full max-w-lg obs-panel-strong rounded-[4px] px-6 py-5 text-slate-100 space-y-4"
       >
-        <div className="flex items-start gap-3.5">
-          <div className="relative shrink-0">
+        <HudCorners tone="amber" />
+
+        <div className="flex items-start gap-4 pt-1">
+          <div className="relative shrink-0 mt-0.5">
             <TerraAvatar size={54} mood={mood} />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-[11px] font-mono tracking-wider uppercase text-amber-300/90 truncate">
-                {typedHeader}
-                {phase === 'header' && (
-                  <span className="inline-block w-1.5 h-3 bg-amber-300 align-middle ml-0.5 animate-pulse" />
-                )}
+              <div className="flex items-center gap-2 min-w-0">
+                <SectionCodeTag label="00 / UPLINK" tone="amber" />
+                <span className="text-[10.5px] font-mono tracking-wider uppercase text-emerald-300/90 truncate">
+                  {typedHeader}
+                  {phase === 'header' && (
+                    <span className="inline-block w-1.5 h-3 bg-amber-300 align-middle ml-0.5 animate-pulse" />
+                  )}
+                </span>
               </div>
 
               {isTypingDone && (
@@ -143,28 +149,28 @@ export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
                   onClick={replayTyping}
                   title="Replay mission briefing"
                   aria-label="Replay mission briefing"
-                  className="p-1 rounded-lg text-slate-400 hover:text-sky-200 hover:bg-white/10 transition-colors shrink-0"
+                  className="p-1 rounded-[3px] text-slate-400 hover:text-amber-300 hover:bg-amber-400/10 transition-colors shrink-0"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-2.5 mt-1">
+            <div className="flex items-center gap-2.5 mt-2">
               <BrandMark size={28} />
-              <h1 className="font-display text-2xl sm:text-[28px] font-bold text-white tracking-tight leading-none">
+              <h1 className="font-title-phosphor text-3xl sm:text-[36px] font-bold uppercase leading-none">
                 TerraWhatIf
               </h1>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Coastal Climate Observatory · Planetary Navigator TERRA
+            <p className="text-[11px] font-mono tracking-wide uppercase text-amber-200/80 mt-1.5">
+              Coastal Climate Observatory · Navigator TERRA
             </p>
           </div>
         </div>
 
         {/* Clean Typewriter Transmission Block */}
         <div
-          className="relative border-t border-b border-white/10 py-3 cursor-pointer"
+          className="relative border-t border-b border-amber-400/22 py-3 cursor-pointer"
           title={isTypingDone ? undefined : 'Click to finish typing'}
         >
           <div className="grid">
@@ -179,37 +185,37 @@ export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
               {!isTypingDone && (phase === 'body' || phase === 'uplink') && (
                 <span
                   aria-hidden="true"
-                  className="inline-block w-1.5 h-3.5 bg-sky-300 align-middle ml-0.5 animate-pulse"
+                  className="inline-block w-1.5 h-3.5 bg-emerald-300 align-middle ml-0.5 animate-pulse"
                 />
               )}
             </p>
           </div>
         </div>
 
-        {/* Hairline-divided 3-Step Overview (zero nested card clutter) */}
+        {/* Hairline-divided 3-Step Overview */}
         <div
-          className={`grid grid-cols-3 gap-3 divide-x divide-white/10 transition-all duration-500 ${
+          className={`grid grid-cols-3 gap-3 divide-x divide-amber-400/20 transition-all duration-500 ${
             showSteps ? 'opacity-100 translate-y-0' : 'opacity-25 translate-y-1'
           }`}
         >
           <div className="space-y-0.5">
-            <div className="text-[10px] font-mono text-amber-300 tabular-nums">01</div>
+            <div className="text-[10px] font-mono text-amber-300 tabular-nums">01 / GUIDE</div>
             <div className="text-xs font-semibold text-white">Follow 3 Steps</div>
           </div>
 
           <div className="pl-3 space-y-0.5">
-            <div className="text-[10px] font-mono text-sky-300 tabular-nums">02</div>
+            <div className="text-[10px] font-mono text-emerald-300 tabular-nums">02 / INSPECT</div>
             <div className="text-xs font-semibold text-white">Scan Deck Gear</div>
           </div>
 
           <div className="pl-3 space-y-0.5">
-            <div className="text-[10px] font-mono text-emerald-300 tabular-nums">03</div>
+            <div className="text-[10px] font-mono text-sky-300 tabular-nums">03 / MODEL</div>
             <div className="text-xs font-semibold text-white">Test “What If”</div>
           </div>
         </div>
 
         <div className="flex items-center justify-between gap-3 pt-1">
-          <span className="text-[11px] font-mono text-slate-400 truncate">
+          <span className="text-[10.5px] font-mono uppercase tracking-wider text-slate-400 truncate">
             NASA CERES · Giovanni · Exoplanet Archive
           </span>
           <button
@@ -218,7 +224,7 @@ export const IntroBriefingCard: React.FC<IntroBriefingCardProps> = ({
               e.stopPropagation();
               onAcceptMission();
             }}
-            className="px-5 py-2.5 rounded-xl bg-amber-400 text-[#06090f] text-xs sm:text-sm font-bold hover:bg-amber-300 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            className="px-5 py-2.5 rounded-[3px] bg-amber-400 text-[#05080f] text-xs sm:text-sm font-mono font-bold uppercase tracking-wider hover:bg-amber-300 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
           >
             <span>Accept Mission</span>
             <ChevronRight className="w-4 h-4" />

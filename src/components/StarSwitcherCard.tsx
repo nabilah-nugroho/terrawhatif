@@ -1,5 +1,6 @@
 import React from 'react';
 import type { StarKey } from '../types/observatory';
+import { HudCorners, SectionCodeTag } from './HudReticleFrame';
 
 interface StarSwitcherCardProps {
   starKey: StarKey;
@@ -17,14 +18,14 @@ export const StarSwitcherCard: React.FC<StarSwitcherCardProps> = ({
   return (
     <div
       aria-label="Host Star Selector"
-      className="fixed z-20 top-16 right-3 sm:right-4 w-[240px] sm:w-[270px] obsidian-hud-strong rounded-2xl p-3 text-slate-100"
+      className="fixed z-20 top-14 right-3 w-[256px] sm:w-[278px] obs-panel-strong rounded-[4px] px-3.5 py-3 text-slate-100"
     >
-      <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-white/10">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-          Host Star
-        </span>
-        <span className="text-[11px] font-mono text-sky-300 tabular-nums">
-          {isTrappist ? '2566 K · M-dwarf' : '5772 K · G-dwarf'}
+      <HudCorners tone="amber" />
+
+      <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-amber-400/20 pt-0.5">
+        <SectionCodeTag label="04 / STAR CLASS" tone="amber" />
+        <span className="text-[10.5px] font-mono text-emerald-300 tabular-nums">
+          {isTrappist ? '2,566 K · M-DWARF' : '5,772 K · G-DWARF'}
         </span>
       </div>
 
@@ -32,10 +33,10 @@ export const StarSwitcherCard: React.FC<StarSwitcherCardProps> = ({
         <button
           type="button"
           onClick={() => onSwitchStar('sun')}
-          className={`p-2 rounded-xl border text-left transition-colors flex items-center gap-2 ${
+          className={`p-2 rounded-[3px] border text-left transition-colors flex items-center gap-2 ${
             !isTrappist
-              ? 'bg-white/10 border-sky-300/50 text-white'
-              : 'bg-transparent border-white/10 text-slate-400 hover:text-white hover:border-white/25'
+              ? 'bg-emerald-400/12 border-emerald-400/55 text-white'
+              : 'bg-transparent border-amber-400/18 text-slate-400 hover:text-white hover:border-amber-400/40'
           }`}
         >
           <svg viewBox="0 0 28 28" className="w-5 h-5 shrink-0" aria-hidden="true">
@@ -44,19 +45,19 @@ export const StarSwitcherCard: React.FC<StarSwitcherCardProps> = ({
           </svg>
           <div className="min-w-0">
             <div className="text-xs font-semibold truncate">Sun</div>
-            <div className="text-[10px] font-mono text-slate-400">Yellow</div>
+            <div className="text-[10px] font-mono text-emerald-300/85">G-Class</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={() => onSwitchStar('trappist1')}
-          className={`w-full p-2 rounded-xl border text-left transition-colors flex items-center gap-2 ${
+          className={`w-full p-2 rounded-[3px] border text-left transition-colors flex items-center gap-2 ${
             isTrappist
-              ? 'bg-amber-400/15 border-amber-300/60 text-amber-100'
+              ? 'bg-amber-400/15 border-amber-400/65 text-amber-100'
               : spotlight
-                ? 'bg-amber-400/10 border-amber-300/80 text-white'
-                : 'bg-transparent border-white/10 text-slate-400 hover:text-white hover:border-white/25'
+                ? 'bg-amber-400/12 border-amber-300/85 text-white'
+                : 'bg-transparent border-amber-400/18 text-slate-400 hover:text-white hover:border-amber-400/40'
           }`}
         >
           <svg viewBox="0 0 28 28" className="w-5 h-5 shrink-0" aria-hidden="true">
@@ -66,7 +67,7 @@ export const StarSwitcherCard: React.FC<StarSwitcherCardProps> = ({
           <div className="min-w-0">
             <div className="text-xs font-semibold truncate">TRAPPIST-1</div>
             <div className="text-[10px] font-mono text-amber-300/90">
-              {spotlight && !isTrappist ? 'Select Target' : 'Red Dwarf'}
+              {spotlight && !isTrappist ? 'Select Target' : 'M-Dwarf'}
             </div>
           </div>
         </button>

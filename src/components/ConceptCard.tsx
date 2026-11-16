@@ -23,6 +23,7 @@ import {
   ConceptMathCurve,
   ConceptWhyLab,
 } from './ConceptInteractiveVisual';
+import { HudCorners, SectionCodeTag } from './HudReticleFrame';
 
 interface ConceptCardProps {
   conceptId: string;
@@ -131,15 +132,20 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
     <div
       role="dialog"
       aria-label={`${kid.title} — Touch to Understand`}
-      className="fixed z-30 top-18 left-3 md:left-[295px] w-[calc(100vw-1.5rem)] sm:w-[446px] max-h-[calc(100vh-11.5rem)] flex flex-col obsidian-hud-strong rounded-2xl overflow-hidden text-slate-100 shadow-2xl"
+      className="fixed z-30 top-14 left-3 md:left-[295px] w-[calc(100vw-1.5rem)] sm:w-[454px] max-h-[calc(100vh-11.5rem)] flex flex-col obs-panel-strong rounded-[4px] overflow-hidden text-slate-100 shadow-2xl"
     >
+      <HudCorners tone="amber" />
+
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 px-5 pt-4 pb-3 border-b border-white/10">
-        <div>
-          <div className="text-[11px] font-mono text-sky-300">
-            Chapter {kid.chapter} · Touch to Understand
+      <div className="flex items-start justify-between gap-4 px-5 pt-4 pb-3 border-b border-amber-400/20">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <SectionCodeTag label={`CH 0${kid.chapter} / INSPECT`} tone="mint" />
+            <span className="text-[10px] font-mono uppercase tracking-wider text-amber-300/85">
+              Touch to Understand
+            </span>
           </div>
-          <h3 className="font-display text-lg font-bold text-white mt-0.5 leading-snug">
+          <h3 className="font-display text-xl font-bold text-white leading-snug">
             {kid.title}
           </h3>
         </div>
@@ -149,7 +155,7 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
             onClick={() => setShowLayerGuide((v) => !v)}
             title="Show 3-layer guide (Look · Why · Math & NASA)"
             aria-label="Toggle 3-layer explanation guide"
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-2 rounded-[3px] transition-colors ${
               showLayerGuide
                 ? 'text-amber-300 bg-amber-400/15'
                 : 'text-slate-400 hover:text-white hover:bg-white/10'
@@ -161,7 +167,7 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close card"
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-[3px] text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -173,7 +179,7 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
         <div
           role="tablist"
           aria-label="Explanation depth"
-          className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10"
+          className="grid grid-cols-3 gap-1.5 p-1 rounded-[3px] bg-black/40 border border-amber-400/20"
         >
           {TAB_META.map((item) => {
             const Icon = item.icon;
@@ -188,15 +194,15 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => selectTab(item.id)}
-                className={`relative px-2 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                className={`relative px-2 py-1.5 text-[11px] font-mono uppercase tracking-wider font-semibold rounded-[2px] transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
                   isActive
                     ? item.id === 'math'
-                      ? 'bg-emerald-400/20 text-white border border-emerald-300/50 shadow-[0_0_14px_rgba(52,211,153,0.2)]'
+                      ? 'bg-emerald-400/20 text-emerald-200 border border-emerald-400/60'
                       : item.id === 'why'
-                        ? 'bg-amber-400/20 text-white border border-amber-300/50 shadow-[0_0_14px_rgba(251,191,36,0.2)]'
-                        : 'bg-sky-400/25 text-white border border-sky-300/50 shadow-[0_0_14px_rgba(56,189,248,0.2)]'
+                        ? 'bg-amber-400/20 text-amber-100 border border-amber-400/60'
+                        : 'bg-sky-400/20 text-sky-100 border border-sky-400/60'
                     : shouldNudge
-                      ? 'bg-amber-400/10 text-amber-100 border border-amber-300/55 hover:bg-amber-400/20'
+                      ? 'bg-amber-400/10 text-amber-100 border border-amber-400/55 hover:bg-amber-400/20'
                       : 'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
@@ -360,16 +366,16 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
       </div>
 
       {/* Guided Step-Through Footer */}
-      <div className="px-5 py-2.5 border-t border-white/10 bg-black/25 flex items-center justify-between gap-3">
-        <span className="text-[11px] font-mono text-slate-400 tabular-nums">
-          Layer {tab === 'look' ? '1' : tab === 'why' ? '2' : '3'} of 3 · {visitedTabs.size}/3 explored
+      <div className="px-5 py-2.5 border-t border-amber-400/20 bg-black/35 flex items-center justify-between gap-3">
+        <span className="text-[10.5px] font-mono uppercase tracking-wider text-slate-400 tabular-nums">
+          LAYER {tab === 'look' ? '01' : tab === 'why' ? '02' : '03'}/03 · {visitedTabs.size}/3 EXPLORED
         </span>
 
         {tab === 'look' && (
           <button
             type="button"
             onClick={() => selectTab('why')}
-            className="px-3 py-1.5 rounded-xl bg-amber-400/18 border border-amber-300/45 hover:bg-amber-400/28 text-xs font-semibold text-amber-100 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-[3px] bg-amber-400/18 border border-amber-400/55 hover:bg-amber-400/28 text-[11px] font-mono uppercase tracking-wider font-semibold text-amber-100 transition-colors flex items-center gap-1.5"
           >
             <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
             <span>Next: Why?</span>
@@ -381,7 +387,7 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
           <button
             type="button"
             onClick={() => selectTab('math')}
-            className="px-3 py-1.5 rounded-xl bg-emerald-400/18 border border-emerald-300/45 hover:bg-emerald-400/28 text-xs font-semibold text-emerald-100 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-[3px] bg-emerald-400/18 border border-emerald-400/55 hover:bg-emerald-400/28 text-[11px] font-mono uppercase tracking-wider font-semibold text-emerald-100 transition-colors flex items-center gap-1.5"
           >
             <Satellite className="w-3.5 h-3.5 text-emerald-300" />
             <span>Next: Math &amp; NASA</span>
@@ -393,7 +399,7 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 hover:bg-white/15 text-xs font-semibold text-white transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-[3px] bg-emerald-400/15 border border-emerald-400/45 hover:bg-emerald-400/25 text-[11px] font-mono uppercase tracking-wider font-semibold text-emerald-200 transition-colors flex items-center gap-1.5"
           >
             <Check className="w-3.5 h-3.5 text-emerald-300" />
             <span>Done</span>

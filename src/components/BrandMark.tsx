@@ -21,32 +21,32 @@ export const BrandMark: React.FC<BrandMarkProps> = ({ size = 24, className = '' 
       rx="13.5"
       ry="5.5"
       transform="rotate(-24 16 16)"
-      stroke="#38bdf8"
-      strokeOpacity="0.65"
-      strokeWidth="1.4"
+      stroke="#f59e0b"
+      strokeOpacity="0.72"
+      strokeWidth="1.3"
     />
     {/* Planetary core horizon */}
     <circle
       cx="16"
       cy="16"
       r="7.2"
-      fill="#0b1322"
-      stroke="#e2e8f0"
-      strokeOpacity="0.85"
+      fill="#050a14"
+      stroke="#5ef2b6"
+      strokeOpacity="0.88"
       strokeWidth="1.35"
     />
     {/* Calibrated atmospheric arc */}
     <path
       d="M10.4 13.5A6.2 6.2 0 0 1 21.6 13.5"
-      stroke="#7dd3fc"
-      strokeWidth="1.4"
+      stroke="#5ef2b6"
+      strokeWidth="1.35"
       strokeLinecap="round"
     />
     {/* Meridian horizon line */}
     <path
       d="M9.6 17.5H22.4"
-      stroke="#38bdf8"
-      strokeOpacity="0.5"
+      stroke="#f59e0b"
+      strokeOpacity="0.58"
       strokeWidth="1.1"
       strokeLinecap="round"
     />

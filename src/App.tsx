@@ -58,6 +58,7 @@ import { ControlsHelpModal } from './components/ControlsHelpModal';
 import { MissionDebriefModal } from './components/MissionDebriefModal';
 import { FeatureTourOverlay } from './components/FeatureTourOverlay';
 import { BrandMark } from './components/BrandMark';
+import { HudCorners, SectionCodeTag, SegmentedGauge } from './components/HudReticleFrame';
 
 const STAGES: { id: StageId; label: string }[] = [
   { id: 'INTRO', label: 'Start' },
@@ -777,6 +778,7 @@ export default function App() {
     mood === 'frozen'
       ? {
           bar: 'bg-cyan-400',
+          segTone: 'cyan' as const,
           text: 'text-cyan-300',
           glyph: '❄',
           shortStatus: 'Frozen',
@@ -785,6 +787,7 @@ export default function App() {
       : mood === 'hot'
         ? {
             bar: 'bg-amber-400',
+            segTone: 'amber' as const,
             text: 'text-amber-300',
             glyph: '▲',
             shortStatus: 'Too Hot',
@@ -792,6 +795,7 @@ export default function App() {
           }
         : {
             bar: 'bg-emerald-400',
+            segTone: 'emerald' as const,
             text: 'text-emerald-300',
             glyph: '●',
             shortStatus: 'Liquid',
@@ -858,20 +862,21 @@ export default function App() {
 
       {/* LIVE NASA GIOVANNI 2003 → 2025 3D REPLAY HUD */}
       {trendReplayIdx !== null && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-30 obsidian-hud-strong rounded-2xl px-4 py-2.5 border border-amber-300/45 shadow-2xl w-[92vw] max-w-md space-y-2">
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 font-mono font-bold text-amber-200">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>NASA Giovanni Live 3D Replay</span>
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-30 obs-panel-strong rounded-[4px] px-4 py-2.5 border border-amber-400/50 w-[92vw] max-w-md space-y-2">
+          <HudCorners tone="amber" />
+          <div className="flex items-center justify-between gap-2 text-xs pt-0.5">
+            <div className="flex items-center gap-2 font-mono font-bold text-amber-200 uppercase tracking-wider text-[10.5px]">
+              <span className="w-1.5 h-1.5 rounded-[1px] bg-amber-400" />
+              <span>NASA Giovanni 3D Replay</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold text-white tabular-nums">
-                Year {2003 + trendReplayIdx}
+              <span className="font-mono font-bold text-emerald-300 tabular-nums">
+                {2003 + trendReplayIdx}
               </span>
               <button
                 type="button"
                 onClick={stopRealTrendReplay}
-                className="px-2 py-0.5 rounded-lg bg-rose-500/25 border border-rose-300/50 text-[10px] font-semibold text-rose-100 hover:bg-rose-500/35 flex items-center gap-1"
+                className="px-2 py-0.5 rounded-[3px] bg-rose-500/20 border border-rose-400/50 text-[10px] font-mono uppercase tracking-wider font-semibold text-rose-100 hover:bg-rose-500/35 flex items-center gap-1"
               >
                 <Square className="w-2.5 h-2.5" />
                 <span>Stop</span>
@@ -879,9 +884,9 @@ export default function App() {
             </div>
           </div>
 
-          <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+          <div className="h-1.5 w-full rounded-[2px] bg-amber-500/15 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-sky-400 via-amber-400 to-rose-400 transition-all duration-200"
+              className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-400 transition-all duration-200"
               style={{
                 width: `${Math.round(
                   ((trendReplayIdx + 1) / trendsData.variables.arctic_surface_temp.data.length) *
@@ -892,21 +897,21 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-[11px] font-mono tabular-nums">
-            <div className="px-2 py-1 rounded-lg bg-black/35 border border-white/10">
-              <div className="text-[9.5px] text-slate-400 font-sans">Arctic Temp</div>
-              <div className="text-sky-200 font-semibold">
+            <div className="px-2 py-1 rounded-[3px] bg-black/40 border border-amber-400/20">
+              <div className="text-[9.5px] text-slate-400 uppercase tracking-wider">Arctic Temp</div>
+              <div className="text-emerald-300 font-semibold">
                 {trendsData.variables.arctic_surface_temp.data[trendReplayIdx].toFixed(2)}°C
               </div>
             </div>
-            <div className="px-2 py-1 rounded-lg bg-black/35 border border-white/10">
-              <div className="text-[9.5px] text-slate-400 font-sans">Sea-Ice Albedo</div>
+            <div className="px-2 py-1 rounded-[3px] bg-black/40 border border-amber-400/20">
+              <div className="text-[9.5px] text-slate-400 uppercase tracking-wider">Ice Albedo</div>
               <div className="text-cyan-200 font-semibold">
                 {trendsData.variables.arctic_sea_ice_albedo.data[trendReplayIdx].toFixed(3)}
               </div>
             </div>
-            <div className="px-2 py-1 rounded-lg bg-black/35 border border-white/10">
-              <div className="text-[9.5px] text-slate-400 font-sans">Tropical Vapor</div>
-              <div className="text-emerald-200 font-semibold">
+            <div className="px-2 py-1 rounded-[3px] bg-black/40 border border-amber-400/20">
+              <div className="text-[9.5px] text-slate-400 uppercase tracking-wider">Vapor</div>
+              <div className="text-amber-200 font-semibold">
                 {trendsData.variables.tropical_water_vapor.data[trendReplayIdx].toFixed(2)}
               </div>
             </div>
@@ -923,9 +928,9 @@ export default function App() {
               onClick={handleToggleSound}
               aria-label={soundMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
               title={soundMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
-              className="obsidian-hud p-2 rounded-xl text-slate-200 hover:text-white hover:border-white/35 transition-colors"
+              className="obs-panel p-2 rounded-[3px] text-slate-200 hover:text-amber-200 hover:border-amber-400/50 transition-colors"
             >
-              {soundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-sky-300" />}
+              {soundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-300" />}
             </button>
             <button
               type="button"
@@ -933,10 +938,10 @@ export default function App() {
                 setStage('CH1');
                 setScienceLabOpen(true);
               }}
-              className="obsidian-hud px-4 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:text-white hover:border-white/35 transition-colors flex items-center gap-1.5"
+              className="obs-panel px-3.5 py-2 rounded-[3px] text-[11px] font-mono uppercase tracking-wider font-semibold text-slate-200 hover:text-emerald-200 hover:border-amber-400/50 transition-colors flex items-center gap-1.5"
             >
-              <FlaskConical className="w-3.5 h-3.5 text-sky-300" />
-              <span>Skip to Science Lab</span>
+              <FlaskConical className="w-3.5 h-3.5 text-emerald-300" />
+              <span>Science Lab</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -955,56 +960,56 @@ export default function App() {
         </>
       )}
 
-      {/* CLEAN TOP BAR + 3P/OVERVIEW MODE + THERMOMETER GAUGE (Chapters 1–3) */}
+      {/* OPEN-EDGE OBSERVATORY TELEMETRY RIBBON (Chapters 1–3) */}
       {stage !== 'INTRO' && !hudHidden && (
-        <header className="fixed top-3 left-3 right-3 z-20 obsidian-hud rounded-2xl px-2.5 sm:px-4 py-2 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Zone 1: Brand Emblem + Wordmark + Quiet Chapter Context */}
-          <div className="flex items-center gap-2 min-w-0 shrink-0 xl:shrink">
+        <header className="fixed top-0 left-0 right-0 z-20 obs-ribbon px-3 sm:px-5 py-2 flex items-center justify-between gap-2 sm:gap-4">
+          {/* Zone 1: Brand Emblem + Phosphor Serif Wordmark + Observatory Context */}
+          <div className="flex items-center gap-2.5 min-w-0 shrink-0 xl:shrink">
             <button
               type="button"
               onClick={() => setStage('INTRO')}
               className="flex items-center gap-2 shrink-0 group"
             >
               <BrandMark size={20} className="transition-transform duration-200 group-hover:scale-105" />
-              <span className="font-display text-xs sm:text-sm font-bold text-white tracking-tight whitespace-nowrap group-hover:text-sky-200 transition-colors">
+              <span className="font-title-phosphor text-lg sm:text-[21px] font-bold uppercase leading-none whitespace-nowrap">
                 TerraWhatIf
               </span>
             </button>
-            <span className="text-white/20 hidden xl:inline shrink-0" aria-hidden="true">
+            <span className="text-amber-400/35 hidden xl:inline shrink-0 font-mono text-xs" aria-hidden="true">
               /
             </span>
-            <span className="text-xs font-medium text-slate-300 truncate hidden xl:inline min-w-0">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-amber-200/80 truncate hidden xl:inline min-w-0">
               {quest ? `${quest.subtitle} · ${quest.title}` : 'Science Lab'}
             </span>
           </div>
 
-          {/* Zone 2: Precision Horizon Climate Readout (unboxed telemetry) */}
+          {/* Zone 2: Precision Segmented Horizon Climate Readout */}
           <div
             data-tour="temp-gauge"
             aria-label="Live planet temperature gauge"
-            className="flex items-center gap-2 sm:gap-3 shrink-0"
+            className="flex items-center gap-2.5 sm:gap-3 shrink-0"
           >
-            <div className="flex items-baseline gap-1 sm:gap-1.5 tabular-nums">
-              <span className="font-display text-sm sm:text-base font-bold text-white whitespace-nowrap">
+            <div className="flex items-baseline gap-1.5 tabular-nums font-mono">
+              <span className={`text-sm sm:text-base font-bold whitespace-nowrap ${gaugeTheme.text}`}>
                 {tempC >= 0 ? '+' : ''}
                 {tempC.toFixed(0)}°C
               </span>
-              <span className="hidden md:inline text-[11px] font-mono text-slate-400 whitespace-nowrap">
+              <span className="hidden md:inline text-[10.5px] text-slate-400 whitespace-nowrap">
                 {simResult.T_surface.toFixed(0)} K
               </span>
             </div>
 
-            <div className="hidden lg:block w-16 xl:w-20 h-1 rounded-full bg-white/10 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ${gaugeTheme.bar}`}
-                style={{ width: `${gaugeFillPct}%` }}
-              />
-            </div>
+            <SegmentedGauge
+              valuePct={gaugeFillPct}
+              segments={14}
+              tone={gaugeTheme.segTone}
+              className="hidden lg:flex"
+            />
 
             <span
-              className={`hidden sm:inline-flex items-center gap-1 text-[11px] font-medium whitespace-nowrap ${gaugeTheme.text}`}
+              className={`hidden sm:inline-flex items-center gap-1 text-[10.5px] font-mono uppercase tracking-wider whitespace-nowrap ${gaugeTheme.text}`}
             >
-              <span aria-hidden="true" className="text-[10px]">
+              <span aria-hidden="true" className="text-[9px]">
                 {gaugeTheme.glyph}
               </span>
               <span className="xl:hidden">{gaugeTheme.shortStatus}</span>
@@ -1013,45 +1018,45 @@ export default function App() {
           </div>
 
           {/* Zone 3: Camera Modes + Chapters + Compact Tools + Lab CTA */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <div
               data-tour="camera-modes"
               aria-label="Explorer & Camera Mode"
-              className="flex items-center gap-0.5 p-0.5 rounded-xl bg-white/[0.04] border border-white/10"
+              className="flex items-center gap-0.5 p-0.5 rounded-[3px] bg-black/35 border border-amber-400/25"
             >
               <button
                 type="button"
                 onClick={() => setThirdPersonMode(true)}
                 aria-pressed={thirdPersonMode}
                 title="3rd-Person Astronaut Mode (V)"
-                className={`px-1.5 sm:px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
+                className={`px-1.5 sm:px-2 py-1 rounded-[2px] text-[10.5px] font-mono uppercase tracking-wider font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
                   thirdPersonMode
                     ? 'bg-amber-400/20 text-amber-200'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <Footprints className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden lg:inline">Walking</span>
+                <Footprints className="w-3 h-3 text-amber-300" />
+                <span className="hidden lg:inline">Walk</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleSelectCameraPreset('observatory')}
                 aria-pressed={!thirdPersonMode && activeCamPreset === 'observatory'}
                 title="Wide Observatory Overview Camera (V)"
-                className={`px-1.5 sm:px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
+                className={`px-1.5 sm:px-2 py-1 rounded-[2px] text-[10.5px] font-mono uppercase tracking-wider font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
                   !thirdPersonMode && activeCamPreset === 'observatory'
-                    ? 'bg-sky-400/20 text-sky-100'
+                    ? 'bg-emerald-400/18 text-emerald-200'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <Compass className="w-3.5 h-3.5 text-sky-300" />
+                <Compass className="w-3 h-3 text-emerald-300" />
                 <span className="hidden md:inline">Overview</span>
               </button>
             </div>
 
             <div
               aria-label="3D Quick Zooms"
-              className="hidden 2xl:flex items-center gap-2 pl-2 border-l border-white/10 text-[11px] font-medium"
+              className="hidden 2xl:flex items-center gap-2 pl-2 border-l border-amber-400/20 text-[10.5px] font-mono uppercase tracking-wider"
             >
               <button
                 type="button"
@@ -1059,7 +1064,7 @@ export default function App() {
                 title="Zoom to 3D Spherical Earth"
                 className={`flex items-center gap-1 transition-colors whitespace-nowrap ${
                   !thirdPersonMode && activeCamPreset === 'earth'
-                    ? 'text-sky-200'
+                    ? 'text-emerald-300'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1072,7 +1077,7 @@ export default function App() {
                 title="Zoom to Polar Ice Shelf"
                 className={`flex items-center gap-1 transition-colors whitespace-nowrap ${
                   !thirdPersonMode && activeCamPreset === 'ice'
-                    ? 'text-sky-200'
+                    ? 'text-emerald-300'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1083,17 +1088,17 @@ export default function App() {
 
             <nav
               aria-label="Chapters"
-              className="hidden xl:flex items-center gap-2 pl-2 border-l border-white/10"
+              className="hidden xl:flex items-center gap-2 pl-2 border-l border-amber-400/20"
             >
               {STAGES.map((s) => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => goToStage(s.id)}
-                  className={`py-0.5 text-[11px] font-medium transition-colors whitespace-nowrap border-b ${
+                  className={`py-0.5 text-[10.5px] font-mono uppercase tracking-wider transition-colors whitespace-nowrap border-b ${
                     stage === s.id
-                      ? 'text-white border-sky-300'
-                      : 'text-slate-400 hover:text-white border-transparent'
+                      ? 'text-emerald-300 border-emerald-400 font-semibold'
+                      : 'text-slate-400 hover:text-amber-200 border-transparent'
                   }`}
                 >
                   {s.label}
@@ -1101,18 +1106,18 @@ export default function App() {
               ))}
             </nav>
 
-            <div className="flex items-center gap-0.5 sm:pl-2 sm:border-l sm:border-white/10">
+            <div className="flex items-center gap-0.5 sm:pl-2 sm:border-l sm:border-amber-400/20">
               <button
                 type="button"
                 onClick={handleToggleSound}
                 aria-label={soundMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
                 title={soundMuted ? 'Unmute ambient sound' : 'Mute ambient sound'}
-                className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/8 transition-colors"
+                className="p-1.5 rounded-[3px] text-slate-300 hover:text-emerald-300 hover:bg-white/8 transition-colors"
               >
                 {soundMuted ? (
                   <VolumeX className="w-3.5 h-3.5 text-slate-400" />
                 ) : (
-                  <Volume2 className="w-3.5 h-3.5 text-sky-300" />
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-300" />
                 )}
               </button>
 
@@ -1121,9 +1126,9 @@ export default function App() {
                 onClick={() => setHelpOpen(true)}
                 aria-label="Controls and shortcuts guide"
                 title="Controls & Shortcuts (?)"
-                className="hidden sm:inline-flex p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/8 transition-colors"
+                className="hidden sm:inline-flex p-1.5 rounded-[3px] text-slate-300 hover:text-amber-300 hover:bg-white/8 transition-colors"
               >
-                <HelpCircle className="w-3.5 h-3.5 text-sky-300" />
+                <HelpCircle className="w-3.5 h-3.5 text-amber-300/90" />
               </button>
 
               <button
@@ -1131,7 +1136,7 @@ export default function App() {
                 onClick={() => setHudHidden(true)}
                 aria-label="Hide HUD to explore 3D scene"
                 title="Hide HUD (H)"
-                className="hidden sm:inline-flex p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/8 transition-colors"
+                className="hidden sm:inline-flex p-1.5 rounded-[3px] text-slate-300 hover:text-white hover:bg-white/8 transition-colors"
               >
                 <EyeOff className="w-3.5 h-3.5 text-slate-300" />
               </button>
@@ -1142,7 +1147,7 @@ export default function App() {
                 type="button"
                 onClick={() => setBadgesOpen(true)}
                 title={`Detective Rank: ${detectiveStatus.rank}`}
-                className="px-1.5 sm:px-2 py-1 rounded-lg hover:bg-white/8 text-[10px] sm:text-xs font-mono text-amber-200 flex items-center gap-1 transition-colors whitespace-nowrap tabular-nums"
+                className="px-1.5 sm:px-2 py-1 rounded-[3px] hover:bg-amber-400/10 text-[10px] sm:text-[11px] font-mono text-amber-300 flex items-center gap-1 transition-colors whitespace-nowrap tabular-nums"
               >
                 <Award className="w-3.5 h-3.5 text-amber-300" />
                 <span className="hidden 2xl:inline font-sans font-semibold text-amber-100">
@@ -1157,18 +1162,18 @@ export default function App() {
                 type="button"
                 onClick={() => setNotebookOpen(true)}
                 title="Discovery Notebook"
-                className="px-1.5 sm:px-2 py-1 rounded-lg hover:bg-white/8 text-[10px] sm:text-xs font-mono text-slate-200 flex items-center gap-1 transition-colors whitespace-nowrap tabular-nums"
+                className="px-1.5 sm:px-2 py-1 rounded-[3px] hover:bg-emerald-400/10 text-[10px] sm:text-[11px] font-mono text-emerald-300 flex items-center gap-1 transition-colors whitespace-nowrap tabular-nums"
               >
-                <BookOpen className="w-3.5 h-3.5 text-sky-300" />
+                <BookOpen className="w-3.5 h-3.5 text-emerald-300" />
                 <span>{inspectedIds.size}/8</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setScienceLabOpen(true)}
-                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-sky-400/20 border border-sky-300/40 hover:bg-sky-400/30 text-[11px] sm:text-xs font-semibold text-white flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                className="px-2.5 sm:px-3 py-1 rounded-[3px] bg-emerald-400/14 border border-emerald-400/50 hover:bg-emerald-400/24 text-[10.5px] sm:text-[11px] font-mono uppercase tracking-wider font-semibold text-emerald-200 flex items-center gap-1.5 transition-colors whitespace-nowrap"
               >
-                <FlaskConical className="w-3.5 h-3.5 text-sky-200" />
+                <FlaskConical className="w-3.5 h-3.5 text-emerald-300" />
                 <span className="hidden sm:inline">Science Lab</span>
                 <span className="sm:hidden">Lab</span>
               </button>
@@ -1179,25 +1184,25 @@ export default function App() {
 
       {/* MINIMAL FLOATING 3D CAMERA BAR WHEN HUD IS HIDDEN */}
       {stage !== 'INTRO' && hudHidden && (
-        <div className="fixed top-3 right-3 z-20 flex items-center gap-1.5 obsidian-hud-strong rounded-2xl p-1.5 shadow-xl">
+        <div className="fixed top-3 right-3 z-20 flex items-center gap-1.5 obs-panel-strong rounded-[4px] p-1.5 shadow-xl">
           <button
             type="button"
             onClick={() => setThirdPersonMode(true)}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors ${
+            className={`px-2.5 py-1 rounded-[3px] text-[11px] font-mono uppercase tracking-wider font-semibold flex items-center gap-1 transition-colors ${
               thirdPersonMode
-                ? 'bg-amber-400/25 border border-amber-300/60 text-amber-100'
+                ? 'bg-amber-400/20 border border-amber-400/55 text-amber-200'
                 : 'text-slate-300 hover:text-white'
             }`}
           >
             <Footprints className="w-3.5 h-3.5" />
-            <span>Walking (3P)</span>
+            <span>Walk</span>
           </button>
           <button
             type="button"
             onClick={() => handleSelectCameraPreset('observatory')}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1 transition-colors ${
+            className={`px-2.5 py-1 rounded-[3px] text-[11px] font-mono uppercase tracking-wider font-medium flex items-center gap-1 transition-colors ${
               !thirdPersonMode && activeCamPreset === 'observatory'
-                ? 'bg-sky-400/25 text-white'
+                ? 'bg-emerald-400/20 text-emerald-200'
                 : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -1207,19 +1212,19 @@ export default function App() {
           <button
             type="button"
             onClick={() => handleSelectCameraPreset('earth')}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1 transition-colors ${
+            className={`px-2.5 py-1 rounded-[3px] text-[11px] font-mono uppercase tracking-wider font-medium flex items-center gap-1 transition-colors ${
               !thirdPersonMode && activeCamPreset === 'earth'
-                ? 'bg-sky-400/25 text-white'
+                ? 'bg-emerald-400/20 text-emerald-200'
                 : 'text-slate-300 hover:text-white'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
-            <span>3D Earth</span>
+            <span>Earth</span>
           </button>
           <button
             type="button"
             onClick={() => setHudHidden(false)}
-            className="px-3 py-1.5 rounded-xl bg-sky-400/20 border border-sky-300/45 text-xs font-semibold text-white flex items-center gap-1.5"
+            className="px-3 py-1 rounded-[3px] bg-amber-400/20 border border-amber-400/50 text-[11px] font-mono uppercase tracking-wider font-semibold text-amber-200 flex items-center gap-1.5"
           >
             <Eye className="w-3.5 h-3.5" />
             <span>Show UI (H)</span>
@@ -1257,20 +1262,27 @@ export default function App() {
           <section
             data-tour="terra-guide"
             aria-label="TERRA step guidance"
-            className="pointer-events-auto w-full md:w-[336px] shrink-0 obsidian-hud-strong rounded-2xl p-3.5 text-slate-100 flex flex-col gap-2.5"
+            className="relative pointer-events-auto w-full md:w-[340px] shrink-0 obs-panel-strong rounded-[4px] px-3.5 py-3 text-slate-100 flex flex-col gap-2.5"
           >
-            <div className="flex items-start gap-3">
+            <HudCorners tone="amber" />
+
+            <div className="flex items-start gap-3 pt-0.5">
               <TerraAvatar size={42} mood={mood} className="shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[11px] font-mono font-medium text-sky-300 truncate">
-                      TERRA · {quest.allDone ? 'Mission Complete' : `Step ${quest.activeStepIndex + 1} of 3`}
+                    <SectionCodeTag label="03 / TERRA" tone="mint" />
+                    <span className="text-[10.5px] font-mono uppercase tracking-wider text-slate-300 truncate">
+                      {quest.allDone ? 'DONE' : `STEP ${quest.activeStepIndex + 1}/3`}
                     </span>
                     {terraSpokenLine && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-200 shrink-0">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                        <span>Voice</span>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-300 shrink-0">
+                        <svg viewBox="0 0 12 10" className="w-3 h-2.5" aria-hidden="true">
+                          <rect x="0.5" y="3" width="2" height="4" fill="currentColor" />
+                          <rect x="4.5" y="1" width="2" height="8" fill="currentColor" />
+                          <rect x="8.5" y="2.5" width="2" height="5" fill="currentColor" />
+                        </svg>
+                        <span>VOICE</span>
                       </span>
                     )}
                   </div>
@@ -1278,7 +1290,7 @@ export default function App() {
                     type="button"
                     onClick={() => setTerraCollapsedMobile((v) => !v)}
                     aria-label={terraCollapsedMobile ? 'Expand TERRA guidance' : 'Collapse TERRA guidance'}
-                    className="md:hidden p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+                    className="md:hidden p-1 rounded-[3px] text-slate-400 hover:text-white hover:bg-white/10"
                   >
                     {terraCollapsedMobile ? (
                       <ChevronUp className="w-3.5 h-3.5" />
@@ -1290,7 +1302,7 @@ export default function App() {
 
                 {!terraCollapsedMobile && (
                   <>
-                    <p className="mt-1 text-xs text-slate-100 leading-relaxed">
+                    <p className="mt-1.5 text-xs text-slate-100 leading-relaxed">
                       {quest.allDone ? (
                         <span className="text-emerald-200 flex items-start gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-300" />
@@ -1302,13 +1314,13 @@ export default function App() {
                     </p>
 
                     {terraSpokenLine && (
-                      <p className="mt-1.5 pt-1.5 border-t border-white/10 text-[11px] italic text-sky-200/90 leading-snug">
+                      <p className="mt-1.5 pt-1.5 border-t border-amber-400/18 text-[11px] italic text-emerald-200/90 leading-snug">
                         “{terraSpokenLine}”
                       </p>
                     )}
 
                     {quest.allDone && (
-                      <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                      <div className="mt-2 pt-2 border-t border-amber-400/18 space-y-1">
                         <div className="flex items-center gap-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-amber-300">
                           <Lightbulb className="w-3 h-3 shrink-0" />
                           <span>Key Takeaway</span>
@@ -1324,14 +1336,14 @@ export default function App() {
             </div>
 
             {!terraCollapsedMobile && (
-              <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-amber-400/20">
                 <button
                   type="button"
                   onClick={() => handleSelectHotspot(quest.currentUnderstandId)}
-                  className="px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/15 hover:bg-white/12 hover:border-sky-300/40 text-xs font-medium text-sky-100 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                  className="px-2.5 py-1.5 rounded-[3px] bg-white/[0.03] border border-amber-400/25 hover:bg-emerald-400/12 hover:border-emerald-300/50 text-[11px] font-mono uppercase tracking-wider font-medium text-emerald-200 transition-colors flex items-center gap-1.5 whitespace-nowrap"
                 >
-                  <Info className="w-3.5 h-3.5 text-sky-300" />
-                  <span>Touch to Understand</span>
+                  <Info className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Understand</span>
                 </button>
 
                 <button
@@ -1343,16 +1355,16 @@ export default function App() {
                       goToStage(nextStageTarget);
                     }
                   }}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-[3px] text-[11px] font-mono uppercase tracking-wider font-bold flex items-center gap-1 transition-colors whitespace-nowrap ${
                     quest.allDone
-                      ? 'bg-amber-400 text-[#06090f] hover:bg-amber-300'
-                      : 'bg-white/5 border border-white/15 text-slate-300 hover:text-white hover:border-white/30'
+                      ? 'bg-amber-400 text-[#05080f] hover:bg-amber-300'
+                      : 'bg-white/[0.03] border border-amber-400/20 text-slate-300 hover:text-white hover:border-amber-400/45'
                   }`}
                 >
                   <span>
                     {quest.allDone
                       ? stage === 'CH3'
-                        ? 'Mission Summary'
+                        ? 'Summary'
                         : 'Next Chapter'
                       : `Steps ${quest.completedCount}/3`}
                   </span>
